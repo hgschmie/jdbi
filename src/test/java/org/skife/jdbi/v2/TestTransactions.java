@@ -16,6 +16,7 @@
 package org.skife.jdbi.v2;
 
 import org.junit.Test;
+import org.kitei.testing.lessio.AllowLocalFileAccess;
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.TransactionException;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@AllowLocalFileAccess(paths={"*target/test-db*"})
 public class TestTransactions extends DBITestCase
 {
     @Test

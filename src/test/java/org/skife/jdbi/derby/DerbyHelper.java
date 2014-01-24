@@ -16,6 +16,7 @@
 package org.skife.jdbi.derby;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.kitei.testing.lessio.AllowLocalFileAccess;
 import org.skife.jdbi.HandyMapThing;
 
 import java.io.File;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+@AllowLocalFileAccess(paths={"*target/test-db*"})
 public class DerbyHelper
 {
     public static final String DERBY_SYSTEM_HOME = "target/test-db";

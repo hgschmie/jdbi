@@ -17,11 +17,13 @@ package org.skife.jdbi.v2;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.kitei.testing.lessio.AllowLocalFileAccess;
 import org.skife.jdbi.v2.util.LongMapper;
 
 import java.sql.Connection;
 import java.sql.Statement;
 
+@AllowLocalFileAccess(paths={"*target/test-db*"})
 public class TestUpdateGeneratedKeys extends DBITestCase
 {
     @Override
