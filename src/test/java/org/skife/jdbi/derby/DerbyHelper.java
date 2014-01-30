@@ -29,7 +29,7 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
-@AllowLocalFileAccess(paths={"*target/test-db*"})
+@AllowLocalFileAccess(paths = { "**target/test-db**", "derby.properties" })
 public class DerbyHelper
 {
     public static final String DERBY_SYSTEM_HOME = "target/test-db";
