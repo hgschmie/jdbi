@@ -154,7 +154,9 @@ class KotlinMapper(val kClass: KClass<*>, private val prefix: String = "") : Row
             return Optional.empty()
         }
 
-        val boundMapper = this.BoundKotlinMapper(resolvedConstructorParameters, memberPropertyMappers)
+        val makeAttributesAccessible = ctx.getConfig(ReflectionMappers::class).isMakeAttributesAccessible
+
+        val boundMapper = this.BoundKotlinMapper(resolvedConstructorParameters, memberPropertyMappers, makeAttributesAccessible)
 
         val propagateNullColumnIndex = locatePropagateNullColumnIndex(columnNames, columnNameMatchers)
 
@@ -322,7 +324,8 @@ class KotlinMapper(val kClass: KClass<*>, private val prefix: String = "") : Row
 
     private inner class BoundKotlinMapper(
         private val resolvedConstructorParameters: Map<KParameter, ParamData>,
-        private val memberPropertyMappers: Map<KMutableProperty1<*, *>, ParamData>
+        private val memberPropertyMappers: Map<KMutableProperty1<*, *>, ParamData>,
+        private val makeAttributesAccessible: Boolean
     ) : RowMapper<Any?> {
         override fun map(rs: ResultSet, ctx: StatementContext): Any? {
             val constructorParametersWithValues = resolvedConstructorParameters
@@ -353,11 +356,12 @@ class KotlinMapper(val kClass: KClass<*>, private val prefix: String = "") : Row
                     }
                     v
                 }
-            constructor.isAccessible = true
+
+            constructor.isAccessible = makeAttributesAccessible
 
             return constructor.callBy(constructorParametersWithValues).also { instance ->
                 memberPropertiesWithValues.forEach { (prop, value) ->
-                    prop.isAccessible = true
+                    prop.isAccessible = makeAttributesAccessible
                     prop.setter.call(instance, value)
                 }
             }

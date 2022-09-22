@@ -13,6 +13,7 @@
  */
 package org.jdbi.v3.core.mapper.reflect;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -177,7 +178,9 @@ public final class FieldMapper<T> implements RowMapper<T> {
 
         fields.sort(Comparator.comparing(f -> f.propagateNull ? 1 : 0));
 
-        RowMapper<T> boundMapper = new BoundFieldMapper(fields);
+        boolean makeAttributesAccessible = ctx.getConfig(ReflectionMappers.class).isMakeAttributesAccessible();
+
+        RowMapper<T> boundMapper = new BoundFieldMapper(fields, makeAttributesAccessible);
         OptionalInt propagateNullColumnIndex = locatePropagateNullColumnIndex(columnNames, columnNameMatchers);
 
         if (propagateNullColumnIndex.isPresent()) {
@@ -239,9 +242,11 @@ public final class FieldMapper<T> implements RowMapper<T> {
     class BoundFieldMapper implements RowMapper<T> {
 
         private final List<FieldData> fields;
+        private final boolean makeAttributesAccessible;
 
-        BoundFieldMapper(List<FieldData> fields) {
+        BoundFieldMapper(List<FieldData> fields, boolean makeAttributesAccessible) {
             this.fields = fields;
+            this.makeAttributesAccessible = makeAttributesAccessible;
         }
 
         @Override
@@ -261,19 +266,21 @@ public final class FieldMapper<T> implements RowMapper<T> {
 
         private T construct() {
             try {
-                return type.getDeclaredConstructor().newInstance();
+                Constructor<T> constructor = type.getDeclaredConstructor();
+                constructor.setAccessible(makeAttributesAccessible);
+                return constructor.newInstance();
             } catch (ReflectiveOperationException e) {
-                throw new IllegalArgumentException(format("A type, %s, was mapped which was not instantiable", type.getName()), e);
+                throw new IllegalArgumentException(format("'%s' was mapped but is not instantiable", type.getName()), e);
             }
         }
 
         @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
         private void writeField(T obj, Field field, Object value) {
             try {
-                field.setAccessible(true);
+                field.setAccessible(makeAttributesAccessible);
                 field.set(obj, value);
             } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException(format("Unable to access property, %s", field.getName()), e);
+                throw new IllegalArgumentException(format("Unable to access property '%s'", field.getName()), e);
             }
         }
 
