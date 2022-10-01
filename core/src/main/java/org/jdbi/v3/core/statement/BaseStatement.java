@@ -13,7 +13,6 @@
  */
 package org.jdbi.v3.core.statement;
 
-import java.io.Closeable;
 import java.sql.SQLException;
 import java.util.Collection;
 
@@ -21,7 +20,8 @@ import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.Configurable;
 
-abstract class BaseStatement<This> implements Closeable, Configurable<This> {
+abstract class BaseStatement<This> implements Configurable<This> {
+
     @SuppressWarnings("unchecked")
     final This typedThis = (This) this;
 
@@ -51,6 +51,20 @@ abstract class BaseStatement<This> implements Closeable, Configurable<This> {
         return ctx;
     }
 
+    public static void nullSafeCleanUp(BaseStatement<?> statement) {
+        if (statement != null) {
+            statement.getContext().close();
+        }
+    }
+
+    protected final void cleanUpForException(SQLException e) {
+        try {
+            nullSafeCleanUp(this);
+        } catch (Exception e1) {
+            e.addSuppressed(e1.getCause());
+        }
+    }
+
     /**
      * Registers the given {@link Cleanable} to be executed when this statement is closed.
      *
@@ -78,11 +92,6 @@ abstract class BaseStatement<This> implements Closeable, Configurable<This> {
 
     private Collection<StatementCustomizer> getCustomizers() {
         return this.getConfig(SqlStatements.class).getCustomizers();
-    }
-
-    @Override
-    public void close() {
-        getContext().close();
     }
 
     @FunctionalInterface

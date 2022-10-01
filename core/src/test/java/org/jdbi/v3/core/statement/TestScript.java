@@ -120,8 +120,9 @@ public class TestScript {
     @Test
     public void testOracleScriptWithBeginEndBlock() throws SQLException {
         String sql = getClasspathSqlLocator().getResource("script/oracle-with-begin-end-blocks.sql");
-        try (Script script = new Script(HandleAccess.createHandle(), sql)) {
-
+        Script script = null;
+        try {
+            script = new Script(HandleAccess.createHandle(), sql);
             List<String> statements = script.getStatements();
 
             assertThat(statements).hasSize(3);
@@ -131,7 +132,8 @@ public class TestScript {
             assertThat(lastStmt).endsWith("END;");
             assertThat(lastStmt).hasLineCount(15);
             assertThat(lastStmt).has(new Condition<>(s -> 7 == s.chars().filter(ch -> ch == ';').count(), "count semicolons"));
-
+        } finally {
+            Script.nullSafeCleanUp(script);
         }
     }
 

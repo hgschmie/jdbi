@@ -259,12 +259,17 @@ public class Handle implements Closeable, Configurable<Handle> {
      * @return the number of rows affected.
      */
     public int execute(CharSequence sql, Object... args) {
-        try (Update stmt = createUpdate(sql)) {
+
+        Update stmt = null;
+        try {
+            stmt = createUpdate(sql);
             int position = 0;
             for (Object arg : args) {
                 stmt.bind(position++, arg);
             }
             return stmt.execute();
+        } finally {
+            Update.nullSafeCleanUp(stmt);
         }
     }
 
