@@ -236,6 +236,7 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @see #useStream(StreamConsumer)
      * @see #withStream(StreamCallback)
      */
+    @SuppressWarnings("PMD.CloseResource")
     default Stream<T> stream() {
         ResultIterator<T> iterator = iterator();
         return StreamSupport.stream(spliteratorUnknownSize(iterator, 0), false)

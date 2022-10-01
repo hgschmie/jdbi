@@ -43,9 +43,10 @@ public final class MetaData extends BaseStatement<MetaData> implements ResultBea
             .scanResultSet(mapper);
     }
 
-    @SuppressWarnings("TypeParameterUnusedInFormals")
+    @SuppressWarnings({"TypeParameterUnusedInFormals", "PMD.CloseResource"})
     public <R> R execute() {
         try {
+            // the connection is owned by the handle. Don't replace with try-with-resources
             Connection connection = handle.getConnection();
             return (R) metaDataFunction.provideValue(connection.getMetaData());
         } catch (SQLException e) {

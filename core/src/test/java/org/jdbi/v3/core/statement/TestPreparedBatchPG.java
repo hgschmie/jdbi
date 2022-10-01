@@ -15,7 +15,9 @@ package org.jdbi.v3.core.statement;
 
 import de.softwareforge.testing.postgres.junit5.EmbeddedPgExtension;
 import de.softwareforge.testing.postgres.junit5.MultiDatabaseBuilder;
+import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.junit5.PgDatabaseExtension;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -29,20 +31,30 @@ public class TestPreparedBatchPG {
     @RegisterExtension
     public PgDatabaseExtension pgExtension = PgDatabaseExtension.instance(pg);
 
+    private Handle handle;
+
+    @BeforeEach
+    void setUp() {
+        this.handle = pgExtension.getSharedHandle();
+    }
+
     @Test
     public void emptyBatch() {
-        assertThat(pgExtension.openHandle().prepareBatch("insert into something (id, name) values (:id, :name)").execute()).isEmpty();
+        assertThat(handle.prepareBatch("insert into something (id, name) values (:id, :name)").execute()).isEmpty();
     }
 
     // This would be a test in `TestPreparedBatch` but H2 has a bug (?) that returns a generated key even when there wasn't one.
     @Test
     public void emptyBatchGeneratedKeys() {
+
+        PreparedBatch batch = handle.prepareBatch("insert into something (id, name) values (:id, :name)");
+        StatementContext ctx = batch.getContext();
         assertThat(
-            pgExtension.openHandle()
-                .prepareBatch("insert into something (id, name) values (:id, :name)")
-                .executeAndReturnGeneratedKeys("id")
+                batch.executeAndReturnGeneratedKeys("id")
                 .mapTo(int.class)
                 .list())
             .isEmpty();
+
+        assertThat(ctx.isClosed()).isTrue();
     }
 }

@@ -324,15 +324,20 @@ public class Jdbi implements Configurable<Jdbi> {
             }
 
             StatementBuilder cache = statementBuilderFactory.get().createStatementBuilder(conn);
-            Handle h = new Handle(this, config.createCopy(), connectionFactory::closeConnection, transactionhandler.get(), cache, conn);
-            for (JdbiPlugin p : plugins) {
-                h = p.customizeHandle(h);
-            }
+            Handle h = customizeHandle(new Handle(this, config.createCopy(), connectionFactory::closeConnection, transactionhandler.get(), cache, conn));
             LOG.trace("Jdbi [{}] obtain handle [{}] in {}ms", this, h, MILLISECONDS.convert(stop - start, NANOSECONDS));
             return h;
         } catch (SQLException e) {
             throw new ConnectionException(e);
         }
+    }
+
+    @SuppressWarnings("PMD.CloseResource")
+    private Handle customizeHandle(Handle handle) throws SQLException {
+        for (JdbiPlugin p : plugins) {
+            handle = p.customizeHandle(handle);
+        }
+        return handle;
     }
 
     /**

@@ -116,6 +116,7 @@ public class Call extends SqlStatement<Call> {
      * Invoke the callable statement and process its {@link OutParameters} results,
      * returning a computed value of type {@code T}.
      */
+    @SuppressWarnings("PMD.CloseResource")
     public <T> T invoke(Function<OutParameters, T> resultComputer) {
         try {
             // it is ok to ignore the PreparedStatement returned here. internalExecute registers it to close with the context and the
