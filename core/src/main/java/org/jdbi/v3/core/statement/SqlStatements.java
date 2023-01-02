@@ -29,8 +29,10 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import org.jdbi.v3.core.cache.JdbiCache;
+import org.jdbi.v3.core.cache.JdbiCacheBuilder;
+import org.jdbi.v3.core.cache.JdbiCacheLoader;
+import org.jdbi.v3.core.cache.internal.InternalJdbiCache;
 import org.jdbi.v3.core.config.JdbiConfig;
 import org.jdbi.v3.meta.Beta;
 
@@ -41,7 +43,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
 
     private final Map<String, Object> attributes;
     private TemplateEngine templateEngine;
-    private Cache<StatementCacheKey, Function<StatementContext, String>> templateCache;
+    private JdbiCache<StatementCacheKey, Function<StatementContext, String>> templateCache;
     private SqlParser sqlParser;
     private SqlLogger sqlLogger;
     private Integer queryTimeout;
@@ -56,7 +58,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
         sqlParser = new ColonPrefixSqlParser();
         sqlLogger = SqlLogger.NOP_SQL_LOGGER;
         queryTimeout = null;
-        templateCache = Caffeine.newBuilder().maximumSize(1_000).build();
+        templateCache = InternalJdbiCache.<StatementCacheKey, Function<StatementContext, String>>builder().maxSize(1_000).build();
     }
 
     private SqlStatements(SqlStatements that) {
@@ -158,14 +160,14 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
     }
 
     /**
-     * Sets the Caffeine cache used to avoid repeatedly parsing SQL statements.
+     * Sets the cache used to avoid repeatedly parsing SQL statements.
      *
-     * @param caffeineSpec the cache builder to use to cache parsed SQL
+     * @param cacheBuilder the cache builder to use to create the cache
      * @return this
      */
     @Beta
-    public SqlStatements setTemplateCache(Caffeine<Object, Object> caffeineSpec) {
-        templateCache = caffeineSpec.build();
+    public SqlStatements setTemplateCache(JdbiCacheBuilder<StatementCacheKey, Function<StatementContext, String>> cacheBuilder) {
+        templateCache = cacheBuilder.build();
         return this;
     }
 
@@ -285,15 +287,18 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
     String preparedRender(String template, StatementContext ctx) {
         try {
             return Optional.ofNullable(
-                            templateCache.get(
+                            templateCache.getWithLoader(
                                     new StatementCacheKey(templateEngine, template),
-                                    key -> key.getTemplateEngine().parse(key.getTemplate(), ctx.getConfig())
-                                            .orElse(null))) // no parse -> no cache
+                                    cacheLoaderFunction(ctx)))
                     .orElse(cx -> templateEngine.render(template, cx)) // fall-back to old behavior
                     .apply(ctx);
         } catch (final IllegalArgumentException e) {
             throw new UnableToCreateStatementException("Exception rendering SQL template", e, ctx);
         }
+    }
+
+    private static JdbiCacheLoader<StatementCacheKey, Function<StatementContext, String>> cacheLoaderFunction(StatementContext ctx) {
+        return key -> key.getTemplateEngine().parse(key.getTemplate(), ctx.getConfig()).orElse(null);
     }
 
     private static final class StatementCacheKey {
