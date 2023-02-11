@@ -81,4 +81,10 @@ public final class JdbiClassUtils {
 
         return result.stream();
     }
+
+    private static final Object[] NO_ARGS = new Object[0];
+
+    public static Object[] safeVarargs(Object... args) {
+        return (args == null) ? NO_ARGS : args;
+    }
 }

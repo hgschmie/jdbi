@@ -59,9 +59,6 @@ import static org.jdbi.v3.sqlobject.Handler.WITH_HANDLE_HANDLER;
 
 public final class SqlObjectInitData {
 
-    // This should be a field in InContextInvoker but static fields are not allowed in inner classes in Java 8
-    private static final Object[] NO_ARGS = new Object[0];
-
     private static final ConfigCache<Class<?>, SqlObjectInitData> INIT_DATA_CACHE =
             ConfigCaches.declare(SqlObjectInitData::initDataFor);
     private final Class<?> extensionType;
@@ -242,8 +239,11 @@ public final class SqlObjectInitData {
         }
 
         public Object invoke(Object... args) {
+            // the args field can be null because it gets called from InvocationHandler.invoke which
+            // takes an Object[]. This can be null in which case Java decides that an Object... is null as well.
+            final Object[] handlerArgs = JdbiClassUtils.safeVarargs(args);
             Handler handler = supplier.get();
-            final Callable<Object> callable = () -> handler.invoke(target, args == null ? NO_ARGS : args, handleSupplier);
+            final Callable<Object> callable = () -> handler.invoke(target, handlerArgs, handleSupplier);
             return call(callable);
         }
 
