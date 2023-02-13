@@ -13,19 +13,12 @@
  */
 package org.jdbi.v3.core.extension;
 
-import org.jdbi.v3.core.JdbiException;
+import java.lang.reflect.Method;
 
-import static java.lang.String.format;
+/**
+ * Customize an extension handler.
+ */
+public interface ExtensionHandlerCustomizer {
 
-public class UnableToCreateExtensionException extends JdbiException {
-
-    private static final long serialVersionUID = 1L;
-
-    UnableToCreateExtensionException(String s, Object... args) {
-        super(format(s, args));
-    }
-
-    UnableToCreateExtensionException(Exception e, String s, Object... args) {
-        super(format(s, args));
-    }
+    ExtensionHandler customize(ExtensionHandler handler, Class<?> extensionType, Method method);
 }
