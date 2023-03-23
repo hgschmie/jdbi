@@ -36,7 +36,6 @@ import org.jdbi.v3.core.mapper.RowViewMapper;
 import org.jdbi.v3.core.mapper.SingleColumnMapper;
 import org.jdbi.v3.core.mapper.reflect.BeanMapper;
 import org.jdbi.v3.core.qualifier.QualifiedType;
-import org.jdbi.v3.core.result.internal.ResultSetResultIterable;
 import org.jdbi.v3.core.result.internal.RowViewImpl;
 import org.jdbi.v3.core.statement.StatementContext;
 
@@ -130,7 +129,7 @@ public interface ResultBearing {
         return scanResultSet((resultSetSupplier, ctx) -> {
             RowMapper<T> rowMapper = ctx.findMapperFor(type)
                     .orElseThrow(() -> new NoSuchMapperException("No mapper registered for type " + type));
-            return new ResultSetResultIterable<>(rowMapper, ctx, resultSetSupplier, type.getType());
+            return ResultIterable.of(resultSetSupplier, rowMapper, ctx);
         });
     }
 
@@ -165,7 +164,7 @@ public interface ResultBearing {
      */
     default <T> ResultIterable<Map<String, T>> mapToMap(Class<T> valueType) {
         return scanResultSet((resultSetSupplier, ctx) ->
-                new ResultSetResultIterable<>(GenericMapMapperFactory.getMapperForValueType(valueType, ctx.getConfig()), ctx, resultSetSupplier, Object.class));
+                ResultIterable.of(resultSetSupplier, GenericMapMapperFactory.getMapperForValueType(valueType, ctx.getConfig()), ctx));
     }
 
     /**
@@ -178,7 +177,7 @@ public interface ResultBearing {
      */
     default <T> ResultIterable<Map<String, T>> mapToMap(GenericType<T> valueType) {
         return scanResultSet((resultSetSupplier, ctx) ->
-                new ResultSetResultIterable<>(GenericMapMapperFactory.getMapperForValueType(valueType, ctx.getConfig()), ctx, resultSetSupplier, Object.class));
+                ResultIterable.of(resultSetSupplier, GenericMapMapperFactory.getMapperForValueType(valueType, ctx.getConfig()), ctx));
     }
 
     /**
@@ -200,7 +199,7 @@ public interface ResultBearing {
      * @return a {@link ResultIterable} of type {@code <T>}.
      */
     default <T> ResultIterable<T> map(RowMapper<T> mapper) {
-        return scanResultSet((resultSetSupplier, ctx) -> new ResultSetResultIterable<>(mapper, ctx, resultSetSupplier, Object.class));
+        return scanResultSet((resultSetSupplier, ctx) -> ResultIterable.of(resultSetSupplier, mapper, ctx));
     }
 
     /**
@@ -400,7 +399,7 @@ public interface ResultBearing {
             RowMapper<?> rowMapper = ctx.findMapperFor(elementType)
                     .orElseThrow(() -> new NoSuchMapperException("No mapper registered for element type " + elementType));
 
-            return new ResultSetResultIterable<>(rowMapper, ctx, resultSetSupplier, elementType).collect(collector);
+            return ResultIterable.of(resultSetSupplier, rowMapper, ctx).collect(collector);
         });
     }
 }

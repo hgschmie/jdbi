@@ -13,7 +13,9 @@
  */
 package org.jdbi.v3.core.result;
 
+import java.lang.reflect.Type;
 import java.sql.ResultSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.jdbi.v3.core.generic.GenericType;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.result.internal.ResultSetResultIterable;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -52,22 +55,18 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @param mapper   row mapper
      * @param ctx      statement context
      * @param <T>      the mapped type
-     * @deprecated the ResultIterable type is not intended to be constructed by user code
      * @return the result iterable
      */
-    @Deprecated
     static <T> ResultIterable<T> of(Supplier<ResultSet> resultSetSupplier, RowMapper<T> mapper, StatementContext ctx) {
-        return new ResultSetResultIterable<>(mapper, ctx, resultSetSupplier, null);
+        return new ResultSetResultIterable<>(mapper, ctx, resultSetSupplier);
     }
 
     /**
      * Returns a ResultIterable backed by the given iterator.
      * @param iterator the result iterator
      * @param <T> iterator element type
-     * @deprecated the ResultIterable type is not intended to be constructed by user code
      * @return a ResultIterable
      */
-    @Deprecated
     static <T> ResultIterable<T> of(ResultIterator<T> iterator) {
         return () -> iterator;
     }
@@ -308,7 +307,7 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @return results in a {@link List}
      */
     default List<T> list() {
-        return collect(Collectors.toList()); // Always overridden by Jdbi
+        return collect(Collectors.toList());
     }
 
     /**
@@ -317,7 +316,7 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @return results in a {@link Set}
      */
     default Set<T> set() {
-        return collect(Collectors.toSet()); // Always overridden by Jdbi
+        return collect(Collectors.toSet());
     }
 
     /**
@@ -343,6 +342,26 @@ public interface ResultIterable<T> extends Iterable<T> {
      */
     default <K, V> Map<K, V> collectToMap(Function<? super T, ? extends K> keyFunction, Function<? super T, ? extends V> valueFunction) {
         return collect(Collectors.toMap(keyFunction, valueFunction));
+    }
+
+    default <C extends Collection<T>> C toCollection(Supplier<C> supplier) {
+        return collect(Collectors.toCollection(supplier));
+    }
+
+    default <R extends Collection<? super T>> R collectInto(Type containerType) {
+        throw new UnsupportedOperationException();
+    }
+
+    default <R extends Collection<? super T>> R collectInto(GenericType<R> containerType) {
+        return collectInto(containerType.getType());
+    }
+
+    default List<T> collectIntoList() {
+        return list();
+    }
+
+    default Set<T> collectIntoSet() {
+        return set();
     }
 
     /**

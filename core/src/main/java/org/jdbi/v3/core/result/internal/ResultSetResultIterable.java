@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+import io.leangen.geantyref.TypeToken;
 import org.jdbi.v3.core.generic.GenericTypes;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.result.ResultIterable;
@@ -31,20 +32,19 @@ import org.jdbi.v3.core.result.UnableToProduceResultException;
 import org.jdbi.v3.core.statement.StatementContext;
 
 public class ResultSetResultIterable<T> implements ResultIterable<T> {
+
+    public static final Type LIST_TYPE = new TypeToken<List<String>>() {}.getType();
+    public static final Type SET_TYPE = new TypeToken<Set<String>>() {}.getType();
     private final RowMapper<T> mapper;
     private final StatementContext ctx;
     private final Supplier<ResultSet> resultSetSupplier;
-    private final Type elementType;
-
     public ResultSetResultIterable(
             RowMapper<T> mapper,
             StatementContext ctx,
-            Supplier<ResultSet> resultSetSupplier,
-            Type elementType) {
+            Supplier<ResultSet> resultSetSupplier) {
         this.mapper = mapper;
         this.ctx = ctx;
         this.resultSetSupplier = resultSetSupplier;
-        this.elementType = GenericTypes.box(elementType);
     }
 
     @Override
@@ -60,24 +60,26 @@ public class ResultSetResultIterable<T> implements ResultIterable<T> {
     }
 
     @Override
-    public List<T> list() {
-        if (elementType == null) {
-            return ResultIterable.super.list();
+    public <R extends Collection<? super T>> R collectInto(Type containerType) {
+
+        Type type = containerType;
+        if (containerType instanceof Class) {
+            // a raw class is a collection that needs to be parameterized with Object
+            type = GenericTypes.parameterizeClass((Class) containerType, Object.class);
         }
-        return collectInto(GenericTypes.parameterizeClass(List.class, elementType));
+
+        Collector<? super T, ?, R> collector = (Collector<? super T, ?, R>) ctx.findCollectorFor(type)
+                .orElseThrow(() -> new UnableToProduceResultException("Could not find collector for " + containerType));
+        return collect(collector);
     }
 
     @Override
-    public Set<T> set() {
-        if (elementType == null) {
-            return ResultIterable.super.set();
-        }
-        return collectInto(GenericTypes.parameterizeClass(Set.class, elementType));
+    public List<T> collectIntoList() {
+        return collectInto(LIST_TYPE);
     }
 
-    @SuppressWarnings("unchecked")
-    private <R extends Collection<? super T>> R collectInto(Type containerType) {
-        return collect((Collector<? super T, ?, R>) ctx.findCollectorFor(containerType)
-                .orElseThrow(() -> new UnableToProduceResultException("Could not find collector for " + containerType)));
+    @Override
+    public Set<T> collectIntoSet() {
+        return collectInto(SET_TYPE);
     }
 }

@@ -14,6 +14,8 @@
 package org.jdbi.v3.core.collector;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +48,7 @@ public class CollectorsTest {
     }
 
     @Test
-    void collectIntoSet() {
+    void testSet() {
         assertThat(queryString().set())
                 .isInstanceOf(Set.class)
                 .containsExactlyInAnyOrder("a", "b", "c");
@@ -54,27 +56,90 @@ public class CollectorsTest {
 
     @Test
     void collectIntoLinkedList() {
-        assertThat(baseQuery().collectInto(new GenericType<LinkedList<String>>() {}))
+        assertThat(queryString().collectInto(new GenericType<LinkedList<String>>() {}))
                 .isInstanceOf(LinkedList.class)
                 .containsExactly("a", "b", "c");
     }
 
     @Test
-    void modifyListImpl() {
+    void testToCollectionWithList() {
         assertThat(queryString().list())
                 .isNotInstanceOf(LinkedList.class);
 
-        assertThat(baseQuery()
-                    .registerCollector(List.class, Collectors.toCollection(LinkedList::new))
-                    .mapTo(String.class)
-                    .list())
+
+        List<String> result = queryString().toCollection(() -> new LinkedList<>());
+
+        assertThat(result)
                 .isInstanceOf(LinkedList.class)
                 .containsExactly("a", "b", "c");
+    }
 
-        assertThat(baseQuery()
-                    .registerCollector(List.class, Collectors.toCollection(LinkedList::new))
-                    .collectInto(new GenericType<ArrayList<String>>() {}))
+    @Test
+    void testToCollectionWithCollection() {
+        assertThat(queryString().list())
+                .isNotInstanceOf(LinkedList.class);
+
+        Collection<String> result = queryString().toCollection(() -> new LinkedList<>());
+
+        assertThat(result)
+                .isInstanceOf(LinkedList.class)
+                .containsExactly("a", "b", "c");
+    }
+
+
+    @Test
+    void testCollectIntoList() {
+        assertThat(queryString().collectIntoList())
+                .isNotInstanceOf(LinkedList.class);
+
+        List<String> stringResult = queryString().collectIntoList();
+
+        assertThat(stringResult)
                 .isInstanceOf(ArrayList.class)
+                .containsExactly("a", "b", "c");
+
+        handle.registerCollector(List.class, Collectors.toCollection(LinkedList::new));
+
+        stringResult = queryString().collectIntoList();
+
+        assertThat(stringResult)
+                .isInstanceOf(LinkedList.class)
+                .containsExactly("a", "b", "c");
+    }
+
+    @Test
+    void testCollectIntoGenericTypeSet() {
+        assertThat(queryString().set())
+                .isNotInstanceOf(LinkedHashSet.class);
+
+        final Set<String> result = queryString().collectInto(new GenericType<LinkedHashSet<String>>() {});
+
+        assertThat(result)
+                .isInstanceOf(LinkedHashSet.class)
+                .containsExactly("a", "b", "c");
+    }
+
+    @Test
+    void testCollectIntoTypeSet() {
+        assertThat(queryString().set())
+                .isNotInstanceOf(LinkedHashSet.class);
+
+        final Set<String> result = queryString().collectInto(LinkedHashSet.class);
+
+        assertThat(result)
+                .isInstanceOf(LinkedHashSet.class)
+                .containsExactly("a", "b", "c");
+    }
+
+    @Test
+    void testCollectIntoCollection() {
+        assertThat(queryString().set())
+                .isNotInstanceOf(LinkedHashSet.class);
+
+        final Collection<String> result = queryString().collectInto(new GenericType<LinkedHashSet<String>>() {});
+
+        assertThat(result)
+                .isInstanceOf(LinkedHashSet.class)
                 .containsExactly("a", "b", "c");
     }
 
