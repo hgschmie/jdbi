@@ -52,18 +52,22 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @param mapper   row mapper
      * @param ctx      statement context
      * @param <T>      the mapped type
+     * @deprecated the ResultIterable type is not intended to be constructed by user code
      * @return the result iterable
      */
+    @Deprecated
     static <T> ResultIterable<T> of(Supplier<ResultSet> resultSetSupplier, RowMapper<T> mapper, StatementContext ctx) {
-        return new ResultSetResultIterable<>(mapper, ctx, resultSetSupplier);
+        return new ResultSetResultIterable<>(mapper, ctx, resultSetSupplier, null);
     }
 
     /**
      * Returns a ResultIterable backed by the given iterator.
      * @param iterator the result iterator
      * @param <T> iterator element type
+     * @deprecated the ResultIterable type is not intended to be constructed by user code
      * @return a ResultIterable
      */
+    @Deprecated
     static <T> ResultIterable<T> of(ResultIterator<T> iterator) {
         return () -> iterator;
     }
@@ -304,7 +308,7 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @return results in a {@link List}
      */
     default List<T> list() {
-        return collect(Collectors.toList());
+        return collect(Collectors.toList()); // Always overridden by Jdbi
     }
 
     /**
@@ -314,7 +318,7 @@ public interface ResultIterable<T> extends Iterable<T> {
      * @since 3.38.0
      */
     default Set<T> set() {
-        return collect(Collectors.toSet());
+        return collect(Collectors.toSet()); // Always overridden by Jdbi
     }
 
     /**
