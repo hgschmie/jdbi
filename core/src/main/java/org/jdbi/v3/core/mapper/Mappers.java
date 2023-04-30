@@ -28,7 +28,7 @@ import org.jdbi.v3.core.qualifier.QualifiedType;
  * configuration of its own. All methods delegate to {@link RowMappers} or
  * {@link ColumnMappers}.
  */
-public class Mappers implements JdbiConfig<Mappers> {
+public final class Mappers implements JdbiConfig<Mappers> {
     private RowMappers rowMappers;
     private ColumnMappers columnMappers;
 

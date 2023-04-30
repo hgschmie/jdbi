@@ -30,7 +30,7 @@ import org.jdbi.v3.meta.Beta;
  * Configures support for an <a href="https://freebuilder.inferred.org">FreeBuilder</a> generated {@code Builder)} value type.
  */
 @Beta
-public class JdbiFreeBuilders implements JdbiConfig<JdbiFreeBuilders> {
+public final class JdbiFreeBuilders implements JdbiConfig<JdbiFreeBuilders> {
     private ConfigRegistry registry;
 
     public JdbiFreeBuilders() {}

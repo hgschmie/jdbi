@@ -33,7 +33,7 @@ import org.jdbi.v3.meta.Beta;
  * Configures support for an <a href="https://immutables.github.io">Immutables</a> generated {@code Immutable} or {@code Modifiable} value type.
  */
 @Beta
-public class JdbiImmutables implements JdbiConfig<JdbiImmutables> {
+public final class JdbiImmutables implements JdbiConfig<JdbiImmutables> {
     private ConfigRegistry registry;
 
     public JdbiImmutables() {}

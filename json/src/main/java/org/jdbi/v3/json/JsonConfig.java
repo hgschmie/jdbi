@@ -16,7 +16,7 @@ package org.jdbi.v3.json;
 import org.jdbi.v3.core.config.JdbiConfig;
 import org.jdbi.v3.json.internal.UnimplementedJsonMapper;
 
-public class JsonConfig implements JdbiConfig<JsonConfig> {
+public final class JsonConfig implements JdbiConfig<JsonConfig> {
     private JsonMapper mapper;
 
     public JsonConfig() {

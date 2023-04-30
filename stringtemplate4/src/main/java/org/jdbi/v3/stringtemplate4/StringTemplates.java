@@ -18,7 +18,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 /**
  * Configuration options for {@link StringTemplateEngine}.
  */
-public class StringTemplates implements JdbiConfig<StringTemplates> {
+public final class StringTemplates implements JdbiConfig<StringTemplates> {
     private boolean failOnMissingAttribute = false;
 
     public StringTemplates() {}

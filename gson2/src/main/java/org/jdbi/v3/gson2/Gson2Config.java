@@ -19,7 +19,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 /**
  * Configuration class for Gson 2 integration.
  */
-public class Gson2Config implements JdbiConfig<Gson2Config> {
+public final class Gson2Config implements JdbiConfig<Gson2Config> {
     private Gson gson;
 
     public Gson2Config() {

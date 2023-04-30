@@ -25,7 +25,7 @@ import org.jdbi.v3.core.statement.StatementContext;
 /**
  * Commonly used ResultProducer implementations.
  */
-public class ResultProducers implements JdbiConfig<ResultProducers> {
+public final class ResultProducers implements JdbiConfig<ResultProducers> {
 
     private boolean allowNoResults = false;
 

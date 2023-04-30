@@ -19,7 +19,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 import org.jdbi.v3.meta.Beta;
 
 @Beta
-public class MapMappers implements JdbiConfig<MapMappers> {
+public final class MapMappers implements JdbiConfig<MapMappers> {
 
     private UnaryOperator<String> caseChange;
 

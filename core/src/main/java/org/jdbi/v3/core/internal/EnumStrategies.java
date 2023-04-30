@@ -26,7 +26,7 @@ import org.jdbi.v3.core.qualifier.Qualifiers;
 
 import static org.jdbi.v3.core.generic.GenericTypes.getErasedType;
 
-public class EnumStrategies implements JdbiConfig<EnumStrategies> {
+public final class EnumStrategies implements JdbiConfig<EnumStrategies> {
     private ConfigRegistry registry;
 
     public EnumStrategies() {}

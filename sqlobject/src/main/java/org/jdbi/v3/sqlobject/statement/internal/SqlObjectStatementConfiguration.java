@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 
 import org.jdbi.v3.core.config.JdbiConfig;
 
-public class SqlObjectStatementConfiguration implements JdbiConfig<SqlObjectStatementConfiguration> {
+public final class SqlObjectStatementConfiguration implements JdbiConfig<SqlObjectStatementConfiguration> {
     private Supplier<Object> returner;
     private Object[] args;
 

@@ -22,7 +22,7 @@ import org.jdbi.v3.meta.Beta;
  * Configuration for {@link StatementException} and subclasses behavior.
  */
 @Beta
-public class StatementExceptions implements JdbiConfig<StatementExceptions> {
+public final class StatementExceptions implements JdbiConfig<StatementExceptions> {
 
     private Function<StatementException, String> messageRendering = MessageRendering.SHORT_STATEMENT;
     private int lengthLimit = 1024;

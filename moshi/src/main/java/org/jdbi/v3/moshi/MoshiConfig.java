@@ -21,7 +21,7 @@ import org.jdbi.v3.meta.Beta;
  * Configuration class for Moshi integration.
  */
 @Beta
-public class MoshiConfig implements JdbiConfig<MoshiConfig> {
+public final class MoshiConfig implements JdbiConfig<MoshiConfig> {
     private Moshi moshi;
 
     public MoshiConfig() {

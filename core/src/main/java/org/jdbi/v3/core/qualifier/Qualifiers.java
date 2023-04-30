@@ -31,7 +31,7 @@ import org.jdbi.v3.core.internal.CollectionCollectors;
 /**
  * Utility class for type qualifiers supported by Jdbi core.
  */
-public class Qualifiers implements JdbiConfig<Qualifiers> {
+public final class Qualifiers implements JdbiConfig<Qualifiers> {
     private static final ConfigCache<AnnotatedElement[], Set<Annotation>> QUALIFIER_CACHE = ConfigCaches.declare(
             elements -> elements.length == 1 ? elements[0] : new HashSet<>(Arrays.asList(elements)),
             (Function<AnnotatedElement[], Set<Annotation>>) Qualifiers::getQualifiers);

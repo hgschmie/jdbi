@@ -20,7 +20,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 /**
  * Configuration for {@link Timestamped}.
  */
-public class TimestampedConfig implements JdbiConfig<TimestampedConfig> {
+public final class TimestampedConfig implements JdbiConfig<TimestampedConfig> {
     private ZoneId timezone;
 
     public TimestampedConfig() {

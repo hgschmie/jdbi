@@ -18,7 +18,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 /**
  * Configuration for behavior related to {@link Enum}s.
  */
-public class Enums implements JdbiConfig<Enums> {
+public final class Enums implements JdbiConfig<Enums> {
     private EnumStrategy strategy;
 
     public Enums() {

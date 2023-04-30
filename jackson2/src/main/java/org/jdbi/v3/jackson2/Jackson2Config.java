@@ -19,7 +19,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 /**
  * Configuration class for Jackson 2 integration.
  */
-public class Jackson2Config implements JdbiConfig<Jackson2Config> {
+public final class Jackson2Config implements JdbiConfig<Jackson2Config> {
     private ObjectMapper mapper;
     private Class<?> serializationView;
     private Class<?> deserializationView;

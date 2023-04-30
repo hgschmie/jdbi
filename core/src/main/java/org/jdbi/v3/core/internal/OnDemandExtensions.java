@@ -28,7 +28,7 @@ import org.jdbi.v3.core.config.JdbiConfig;
 import org.jdbi.v3.core.extension.Extensions;
 import org.jdbi.v3.core.internal.exceptions.Unchecked;
 
-public class OnDemandExtensions implements JdbiConfig<OnDemandExtensions> {
+public final class OnDemandExtensions implements JdbiConfig<OnDemandExtensions> {
     private static final Method EQUALS_METHOD;
     private static final Method HASHCODE_METHOD;
     private static final Method TOSTRING_METHOD;

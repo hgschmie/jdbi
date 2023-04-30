@@ -19,7 +19,7 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import org.jdbi.v3.core.config.JdbiConfig;
 
-public class FreemarkerConfig implements JdbiConfig<FreemarkerConfig> {
+public final class FreemarkerConfig implements JdbiConfig<FreemarkerConfig> {
 
     private Configuration freemarkerConfiguration;
 
