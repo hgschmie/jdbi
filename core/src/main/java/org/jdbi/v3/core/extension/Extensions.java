@@ -13,15 +13,13 @@
  */
 package org.jdbi.v3.core.extension;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
 import org.jdbi.v3.core.extension.annotation.UseExtensionHandler;
 import org.jdbi.v3.core.extension.annotation.UseExtensionHandlerCustomizer;
 import org.jdbi.v3.meta.Alpha;
@@ -33,13 +31,13 @@ import static org.jdbi.v3.core.extension.ExtensionFactory.FactoryFlag.NON_VIRTUA
  * Configuration class for defining {@code Jdbi} extensions via {@link ExtensionFactory}
  * instances.
  */
-public class Extensions implements JdbiConfig<Extensions> {
+public final class Extensions implements JdbiConfig<Extensions> {
 
-    private final List<ExtensionFactoryDelegate> extensionFactories;
-    private final ConcurrentMap<Class<?>, ExtensionMetadata> extensionMetadataCache;
-    private final List<ExtensionHandlerCustomizer> extensionHandlerCustomizers;
-    private final List<ExtensionHandlerFactory> extensionHandlerFactories;
-    private final List<ConfigCustomizerFactory> configCustomizerFactories;
+    private JdbiConfigList<ExtensionFactoryDelegate> extensionFactories;
+    private JdbiConfigMap<Class<?>, ExtensionMetadata> extensionMetadataCache;
+    private JdbiConfigList<ExtensionHandlerCustomizer> extensionHandlerCustomizers;
+    private JdbiConfigList<ExtensionHandlerFactory> extensionHandlerFactories;
+    private JdbiConfigList<ConfigCustomizerFactory> configCustomizerFactories;
 
     private boolean allowProxy = true;
 
@@ -54,11 +52,12 @@ public class Extensions implements JdbiConfig<Extensions> {
      * </ul>
      */
     public Extensions() {
-        extensionFactories = new CopyOnWriteArrayList<>();
-        extensionMetadataCache = new ConcurrentHashMap<>();
-        extensionHandlerCustomizers = new CopyOnWriteArrayList<>();
-        extensionHandlerFactories = new CopyOnWriteArrayList<>();
-        configCustomizerFactories = new CopyOnWriteArrayList<>();
+        this.extensionFactories = JdbiConfigList.create();
+        this.extensionMetadataCache = JdbiConfigMap.create();
+        this.extensionHandlerCustomizers = JdbiConfigList.create();
+        this.extensionHandlerFactories = JdbiConfigList.create();
+        this.configCustomizerFactories = JdbiConfigList.create();
+
         // default handler factories for bridge and default methods
         internalRegisterHandlerFactory(DefaultMethodExtensionHandlerFactory.INSTANCE);
         internalRegisterHandlerFactory(BridgeMethodExtensionHandlerFactory.INSTANCE);
@@ -78,12 +77,12 @@ public class Extensions implements JdbiConfig<Extensions> {
      * @param that the configuration to clone
      */
     private Extensions(Extensions that) {
-        allowProxy = that.allowProxy;
-        extensionFactories = new CopyOnWriteArrayList<>(that.extensionFactories);
-        extensionMetadataCache = new ConcurrentHashMap<>(that.extensionMetadataCache);
-        extensionHandlerCustomizers = new CopyOnWriteArrayList<>(that.extensionHandlerCustomizers);
-        extensionHandlerFactories = new CopyOnWriteArrayList<>(that.extensionHandlerFactories);
-        configCustomizerFactories = new CopyOnWriteArrayList<>(that.configCustomizerFactories);
+        this.allowProxy = that.allowProxy;
+        this.extensionFactories = that.extensionFactories;
+        this.extensionMetadataCache = that.extensionMetadataCache;
+        this.extensionHandlerCustomizers = that.extensionHandlerCustomizers;
+        this.extensionHandlerFactories = that.extensionHandlerFactories;
+        this.configCustomizerFactories = that.configCustomizerFactories;
     }
 
     @Override
@@ -98,7 +97,7 @@ public class Extensions implements JdbiConfig<Extensions> {
      * @return This instance
      */
     public Extensions register(ExtensionFactory factory) {
-        extensionFactories.add(0, new ExtensionFactoryDelegate(factory));
+        this.extensionFactories = extensionFactories.addFirst(new ExtensionFactoryDelegate(factory));
         return this;
     }
 
@@ -125,7 +124,7 @@ public class Extensions implements JdbiConfig<Extensions> {
      */
     @Alpha
     public Extensions registerHandlerCustomizer(ExtensionHandlerCustomizer extensionHandlerCustomizer) {
-        extensionHandlerCustomizers.add(0, extensionHandlerCustomizer);
+        this.extensionHandlerCustomizers = extensionHandlerCustomizers.addFirst(extensionHandlerCustomizer);
         return this;
     }
 
@@ -139,7 +138,7 @@ public class Extensions implements JdbiConfig<Extensions> {
      */
     @Alpha
     public Extensions registerConfigCustomizerFactory(ConfigCustomizerFactory configCustomizerFactory) {
-        configCustomizerFactories.add(0, configCustomizerFactory);
+        this.configCustomizerFactories = configCustomizerFactories.addFirst(configCustomizerFactory);
         return this;
     }
 
@@ -208,11 +207,17 @@ public class Extensions implements JdbiConfig<Extensions> {
      */
     @Alpha
     public ExtensionMetadata findMetadata(Class<?> extensionType, ExtensionFactory extensionFactory) {
-        return extensionMetadataCache.computeIfAbsent(extensionType, createMetadata(extensionFactory));
+        if (extensionMetadataCache.hasKey(extensionType)) {
+            return extensionMetadataCache.getElement(extensionType);
+        }
+
+        ExtensionMetadata extensionMetadata = createMetadata(extensionFactory).apply(extensionType);
+        this.extensionMetadataCache = extensionMetadataCache.putElement(extensionType, extensionMetadata);
+        return extensionMetadata;
     }
 
     private Extensions internalRegisterHandlerFactory(ExtensionHandlerFactory extensionHandlerFactory) {
-        extensionHandlerFactories.add(0, extensionHandlerFactory);
+        this.extensionHandlerFactories = extensionHandlerFactories.addFirst(extensionHandlerFactory);
         return this;
     }
 

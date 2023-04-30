@@ -14,11 +14,10 @@
 package org.jdbi.v3.sqlobject;
 
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.extension.ExtensionHandler;
 
 /**
@@ -33,16 +32,17 @@ import org.jdbi.v3.core.extension.ExtensionHandler;
  * from the {@link org.jdbi.v3.core.extension.ExtensionFactory#getExtensionHandlerCustomizers(ConfigRegistry)}.
  */
 @Deprecated
-public class HandlerDecorators implements JdbiConfig<HandlerDecorators> {
-    private final List<HandlerDecorator> decorators;
+public final class HandlerDecorators implements JdbiConfig<HandlerDecorators> {
+    private JdbiConfigList<HandlerDecorator> decorators;
 
     public HandlerDecorators() {
-        decorators = new CopyOnWriteArrayList<>();
+        this.decorators = JdbiConfigList.create();
+
         register(new SqlMethodAnnotatedHandlerDecorator());
     }
 
     private HandlerDecorators(HandlerDecorators that) {
-        decorators = new CopyOnWriteArrayList<>(that.decorators);
+        this.decorators = that.decorators;
     }
 
     /**
@@ -52,7 +52,7 @@ public class HandlerDecorators implements JdbiConfig<HandlerDecorators> {
      * @return this
      */
     public HandlerDecorators register(HandlerDecorator decorator) {
-        decorators.add(decorator);
+        this.decorators = decorators.addLast(decorator);
         return this;
     }
 

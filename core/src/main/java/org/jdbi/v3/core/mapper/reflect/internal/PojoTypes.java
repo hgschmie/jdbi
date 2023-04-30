@@ -14,22 +14,23 @@
 package org.jdbi.v3.core.mapper.reflect.internal;
 
 import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
 import org.jdbi.v3.core.generic.GenericTypes;
 
-public class PojoTypes implements JdbiConfig<PojoTypes> {
-    private final Map<Class<?>, PojoPropertiesFactory> factories = new ConcurrentHashMap<>();
+public final class PojoTypes implements JdbiConfig<PojoTypes> {
+    private JdbiConfigMap<Class<?>, PojoPropertiesFactory> factories;
     private ConfigRegistry registry;
 
-    public PojoTypes() {}
+    public PojoTypes() {
+        this.factories = JdbiConfigMap.create();
+    }
 
-    private PojoTypes(PojoTypes other) {
-        factories.putAll(other.factories);
+    private PojoTypes(PojoTypes that) {
+        this.factories = that.factories;
     }
 
     @Override
@@ -38,12 +39,12 @@ public class PojoTypes implements JdbiConfig<PojoTypes> {
     }
 
     public PojoTypes register(Class<?> key, PojoPropertiesFactory factory) {
-        factories.put(key, factory);
+        this.factories = factories.putElement(key, factory);
         return this;
     }
 
     public Optional<PojoProperties<?>> findFor(Type type) {
-        return Optional.ofNullable(factories.get(GenericTypes.getErasedType(type)))
+        return Optional.ofNullable(factories.getElement(GenericTypes.getErasedType(type)))
                 .map(ppf -> ppf.create(type, registry));
     }
 

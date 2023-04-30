@@ -14,26 +14,25 @@
 package org.jdbi.v3.core.collector;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collector;
 
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
 
 /**
  * Registry of collector factories.
  * Contains a set of collector factories, registered by the application.
  */
-public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
-    private final List<CollectorFactory> factories;
-    private ConcurrentMap<Type, Optional<CollectorFactory>> factoryCache;
+public final class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
+    private JdbiConfigList<CollectorFactory> factories;
+    private JdbiConfigMap<Type, Optional<CollectorFactory>> factoryCache;
 
     public JdbiCollectors() {
-        factories = new CopyOnWriteArrayList<>();
-        factoryCache = new ConcurrentHashMap<>();
+        this.factories = JdbiConfigList.create();
+        this.factoryCache = JdbiConfigMap.create();
+
         register(new MapCollectorFactory());
         register(new OptionalCollectorFactory());
         register(new ListCollectorFactory());
@@ -44,8 +43,8 @@ public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
     }
 
     private JdbiCollectors(JdbiCollectors that) {
-        factoryCache = that.factoryCache;
-        factories = new CopyOnWriteArrayList<>(that.factories);
+        this.factoryCache = that.factoryCache;
+        this.factories = that.factories;
     }
 
     /**
@@ -54,8 +53,9 @@ public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
      * @return this
      */
     public JdbiCollectors register(CollectorFactory factory) {
-        factories.add(0, factory);
-        factoryCache = new ConcurrentHashMap<>();
+        this.factories = factories.addFirst(factory);
+
+        this.factoryCache = factoryCache.clear();
         return this;
     }
 
@@ -94,15 +94,15 @@ public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
     }
 
     private Optional<CollectorFactory> findFactoryFor(Type containerType) {
-        Optional<CollectorFactory> entry = factoryCache.get(containerType);
-        if (entry != null) {
-            return entry;
+        if (factoryCache.hasKey(containerType)) {
+            return factoryCache.getElement(containerType);
         }
-        entry = factories.stream()
+
+        Optional<CollectorFactory> factory = factories.stream()
                 .filter(f -> f.accepts(containerType))
                 .findFirst();
-        factoryCache.putIfAbsent(containerType, entry);
-        return entry;
+        this.factoryCache = factoryCache.putElement(containerType, factory);
+        return factory;
     }
 
     @Override

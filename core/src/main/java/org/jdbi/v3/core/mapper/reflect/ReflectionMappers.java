@@ -14,14 +14,12 @@
 package org.jdbi.v3.core.mapper.reflect;
 
 import java.lang.reflect.AccessibleObject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.mapper.CaseStrategy;
 import org.jdbi.v3.meta.Alpha;
 
@@ -31,9 +29,9 @@ import static org.jdbi.v3.core.mapper.reflect.AccessibleObjectStrategy.FORCE_MAK
 /**
  * Configuration class for reflective mappers.
  */
-public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
+public final class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
 
-    private List<ColumnNameMatcher> columnNameMatchers;
+    private JdbiConfigList<ColumnNameMatcher> columnNameMatchers;
     private boolean strictMatching;
     private UnaryOperator<String> caseChange;
     private Consumer<AccessibleObject> makeAccessible;
@@ -43,19 +41,22 @@ public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
      * snake_case matching for names.
      */
     public ReflectionMappers() {
-        columnNameMatchers = Arrays.asList(
+        this.columnNameMatchers = JdbiConfigList.create();
+
+        this.columnNameMatchers = columnNameMatchers.addFirst(
                 new CaseInsensitiveColumnNameMatcher(),
                 new SnakeCaseColumnNameMatcher());
-        strictMatching = false;
-        caseChange = CaseStrategy.LOCALE_LOWER;
-        makeAccessible = FORCE_MAKE_ACCESSIBLE;
+
+        this.strictMatching = false;
+        this.caseChange = CaseStrategy.LOCALE_LOWER;
+        this.makeAccessible = FORCE_MAKE_ACCESSIBLE;
     }
 
     private ReflectionMappers(ReflectionMappers that) {
-        columnNameMatchers = new ArrayList<>(that.columnNameMatchers);
-        strictMatching = that.strictMatching;
-        caseChange = that.caseChange;
-        makeAccessible = that.makeAccessible;
+        this.columnNameMatchers = that.columnNameMatchers;
+        this.strictMatching = that.strictMatching;
+        this.caseChange = that.caseChange;
+        this.makeAccessible = that.makeAccessible;
     }
 
     /**
@@ -64,16 +65,16 @@ public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
      * @return the registered column name mappers.
      */
     public List<ColumnNameMatcher> getColumnNameMatchers() {
-        return Collections.unmodifiableList(columnNameMatchers);
+        return columnNameMatchers.asUnmodifiableList();
     }
 
     /**
      * Replace all column name matchers with the given list.
-     * @param columnNameMatchers the column name matchers to use
+     * @param newColumnNameMatchers the column name matchers to use
      * @return this
      */
-    public ReflectionMappers setColumnNameMatchers(List<ColumnNameMatcher> columnNameMatchers) {
-        this.columnNameMatchers = new ArrayList<>(columnNameMatchers);
+    public ReflectionMappers setColumnNameMatchers(List<ColumnNameMatcher> newColumnNameMatchers) {
+        this.columnNameMatchers = columnNameMatchers.addFirst(newColumnNameMatchers);
         return this;
     }
 

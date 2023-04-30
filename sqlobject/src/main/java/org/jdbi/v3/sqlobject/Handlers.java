@@ -16,10 +16,10 @@ package org.jdbi.v3.sqlobject;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.extension.ExtensionHandlerFactory;
 import org.jdbi.v3.core.internal.JdbiOptionals;
 
@@ -34,19 +34,19 @@ import org.jdbi.v3.core.internal.JdbiOptionals;
  * from the {@link org.jdbi.v3.core.extension.ExtensionFactory#getExtensionHandlerFactories(ConfigRegistry)} method.
  */
 @Deprecated
-public class Handlers implements JdbiConfig<Handlers> {
-    private final List<HandlerFactory> factories;
+public final class Handlers implements JdbiConfig<Handlers> {
+    private JdbiConfigList<HandlerFactory> factories;
 
     public Handlers() {
-        factories = new CopyOnWriteArrayList<>();
+        this.factories = JdbiConfigList.create();
     }
 
     private Handlers(Handlers that) {
-        factories = new CopyOnWriteArrayList<>(that.factories);
+        this.factories = that.factories;
     }
 
     List<HandlerFactory> getFactories() {
-        return factories;
+        return factories.asUnmodifiableList();
     }
 
     /**
@@ -55,7 +55,7 @@ public class Handlers implements JdbiConfig<Handlers> {
      * @return this
      */
     public Handlers register(HandlerFactory factory) {
-        factories.add(0, factory);
+        this.factories = factories.addFirst(factory);
         return this;
     }
 

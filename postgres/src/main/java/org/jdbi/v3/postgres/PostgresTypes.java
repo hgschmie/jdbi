@@ -13,12 +13,10 @@
  */
 package org.jdbi.v3.postgres;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.jdbi.v3.core.array.SqlArrayTypes;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
 import org.jdbi.v3.core.internal.exceptions.Unchecked;
 import org.postgresql.PGConnection;
 import org.postgresql.util.PGobject;
@@ -26,16 +24,18 @@ import org.postgresql.util.PGobject;
 /**
  * Handler for PostgreSQL custom types.
  */
-public class PostgresTypes implements JdbiConfig<PostgresTypes> {
-    private final Map<Class<? extends PGobject>, String> types = new ConcurrentHashMap<>();
+public final class PostgresTypes implements JdbiConfig<PostgresTypes> {
+    private JdbiConfigMap<Class<? extends PGobject>, String> types;
     private ConfigRegistry registry;
     private PgLobApi lob;
 
     @SuppressWarnings("unused")
-    public PostgresTypes() {}
+    public PostgresTypes() {
+        this.types = JdbiConfigMap.create();
+    }
 
     private PostgresTypes(PostgresTypes that) {
-        this.types.putAll(that.types);
+        this.types = that.types;
         this.lob = that.lob;
     }
 
@@ -53,7 +53,7 @@ public class PostgresTypes implements JdbiConfig<PostgresTypes> {
     public PostgresTypes registerCustomType(Class<? extends PGobject> clazz, String typeName) {
         registry.get(SqlArrayTypes.class).register(clazz, typeName);
 
-        types.put(clazz, typeName);
+        this.types = types.putElement(clazz, typeName);
 
         return this;
     }

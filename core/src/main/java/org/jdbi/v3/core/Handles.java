@@ -13,28 +13,27 @@
  */
 package org.jdbi.v3.core;
 
-import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigSet;
 
 /**
  * Configuration class for handles.
  */
-public class Handles implements JdbiConfig<Handles> {
+public final class Handles implements JdbiConfig<Handles> {
 
     private boolean forceEndTransactions = true;
 
-    private final Set<HandleListener> handleListeners;
+    private JdbiConfigSet<HandleListener> handleListeners;
 
     public Handles() {
-        handleListeners = new CopyOnWriteArraySet<>();
+        this.handleListeners = JdbiConfigSet.create();
     }
 
     private Handles(Handles that) {
         this.forceEndTransactions = that.forceEndTransactions;
-        this.handleListeners = new CopyOnWriteArraySet<>(that.handleListeners);
+        this.handleListeners = that.handleListeners;
     }
 
     /**
@@ -73,7 +72,7 @@ public class Handles implements JdbiConfig<Handles> {
      * @return The Handles object itself.
      */
     public Handles addListener(final HandleListener handleListener) {
-        this.handleListeners.add(handleListener);
+        this.handleListeners = handleListeners.addElements(handleListener);
         return this;
     }
 
@@ -85,7 +84,7 @@ public class Handles implements JdbiConfig<Handles> {
      * @return The Handles object itself.
      */
     public Handles removeListener(final HandleListener handleListener) {
-        this.handleListeners.remove(handleListener);
+        this.handleListeners = handleListeners.removeElements(handleListener);
         return this;
     }
 
@@ -95,11 +94,11 @@ public class Handles implements JdbiConfig<Handles> {
      * @return A set of {@link HandleListener} objects. The set is never null, can be empty and is immutable.
      */
     public Set<HandleListener> getListeners() {
-        return Collections.unmodifiableSet(handleListeners);
+        return handleListeners.asUnmodifiableSet();
     }
 
-    CopyOnWriteArraySet<HandleListener> copyListeners() {
-        return new CopyOnWriteArraySet<>(handleListeners);
+    JdbiConfigSet<HandleListener> copyListeners() {
+        return handleListeners;
     }
 
     @Override

@@ -14,14 +14,13 @@
 package org.jdbi.v3.core.mapper;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jdbi.v3.core.array.SqlArrayMapperFactory;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
 import org.jdbi.v3.core.enums.internal.EnumMapperFactory;
 import org.jdbi.v3.core.generic.GenericType;
 import org.jdbi.v3.core.interceptor.JdbiInterceptionChainHolder;
@@ -32,19 +31,20 @@ import org.jdbi.v3.meta.Alpha;
 /**
  * Configuration registry for {@link ColumnMapperFactory} instances.
  */
-public class ColumnMappers implements JdbiConfig<ColumnMappers> {
+public final class ColumnMappers implements JdbiConfig<ColumnMappers> {
 
     private final JdbiInterceptionChainHolder<ColumnMapper<?>, QualifiedColumnMapperFactory> inferenceInterceptors;
-
-    private final List<QualifiedColumnMapperFactory> factories;
-    private final ConcurrentHashMap<QualifiedType<?>, Optional<? extends ColumnMapper<?>>> cache = new ConcurrentHashMap<>();
+    private JdbiConfigList<QualifiedColumnMapperFactory> factories;
+    private JdbiConfigMap<QualifiedType<?>, Optional<? extends ColumnMapper<?>>> cache;
 
     private boolean coalesceNullPrimitivesToDefaults = true;
     private ConfigRegistry registry;
 
     public ColumnMappers() {
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredColumnMapperFactory::new);
-        factories = new CopyOnWriteArrayList<>();
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredColumnMapperFactory::new);
+        this.factories = JdbiConfigList.create();
+        this.cache = JdbiConfigMap.create();
+
         register(new SqlArrayMapperFactory());
         register(new JavaTimeMapperFactory());
         register(new SqlTimeMapperFactory());
@@ -58,10 +58,10 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
     }
 
     private ColumnMappers(ColumnMappers that) {
-        factories = new CopyOnWriteArrayList<>(that.factories);
-        cache.putAll(that.cache);
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
-        coalesceNullPrimitivesToDefaults = that.coalesceNullPrimitivesToDefaults;
+        this.factories = that.factories;
+        this.cache = that.cache;
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
+        this.coalesceNullPrimitivesToDefaults = that.coalesceNullPrimitivesToDefaults;
     }
 
     @Override
@@ -153,8 +153,8 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
      * @return this
      */
     public ColumnMappers register(QualifiedColumnMapperFactory factory) {
-        factories.add(0, factory);
-        cache.clear();
+        this.factories = factories.addFirst(factory);
+        this.cache = cache.clear();
         return this;
     }
 
@@ -202,13 +202,8 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> Optional<ColumnMapper<T>> findFor(QualifiedType<T> type) {
-        // ConcurrentHashMap can enter an infinite loop on nested computeIfAbsent calls.
-        // Since column mappers can decorate other column mappers, we have to populate the cache the old fashioned way.
-        // See https://bugs.openjdk.java.net/browse/JDK-8062841, https://bugs.openjdk.java.net/browse/JDK-8142175
-        Optional<ColumnMapper<T>> cached = (Optional) cache.get(type);
-
-        if (cached != null) {
-            return cached;
+        if (cache.hasKey(type)) {
+            return (Optional<ColumnMapper<T>>) cache.getElement(type);
         }
 
         Optional<ColumnMapper<T>> mapper = (Optional) factories.stream()
@@ -217,7 +212,7 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
 
         mapper.ifPresent(m -> m.init(registry));
 
-        cache.put(type, mapper);
+        this.cache = cache.putElement(type, mapper);
 
         return mapper;
     }

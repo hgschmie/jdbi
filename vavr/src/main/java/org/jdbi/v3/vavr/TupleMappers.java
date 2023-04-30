@@ -16,6 +16,7 @@ package org.jdbi.v3.vavr;
 import io.vavr.Tuple;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.mapper.MapEntryConfig;
 import org.jdbi.v3.core.mapper.MapEntryMappers;
 
@@ -23,19 +24,21 @@ import org.jdbi.v3.core.mapper.MapEntryMappers;
  * Mappers similar to {@link org.jdbi.v3.core.mapper.MapEntryMappers} but map entries in vavr are in fact
  * of type {@link io.vavr.Tuple2}.
  */
-public class TupleMappers implements JdbiConfig<TupleMappers>, MapEntryConfig<TupleMappers> {
+public final class TupleMappers implements JdbiConfig<TupleMappers>, MapEntryConfig<TupleMappers> {
 
     private static final int KEY_COLUMN_TUPLE_INDEX = 1;
     private static final int VALUE_COLUMN_TUPLE_INDEX = 2;
 
     private ConfigRegistry registry;
 
-    private String[] columns = new String[Tuple.MAX_ARITY];
+    private JdbiConfigList<String> columns;
 
-    public TupleMappers() {}
+    public TupleMappers() {
+        this.columns = JdbiConfigList.create(Tuple.MAX_ARITY);
+    }
 
     private TupleMappers(TupleMappers that) {
-        System.arraycopy(that.columns, 0, this.columns, 0, Tuple.MAX_ARITY);
+        this.columns = that.columns;
     }
 
     @Override
@@ -76,7 +79,7 @@ public class TupleMappers implements JdbiConfig<TupleMappers>, MapEntryConfig<Tu
      * @return Config object for chaining
      */
     public TupleMappers setColumn(int tupleIndex, String name) {
-        columns[tupleIndex - 1] = name;
+        columns = columns.setValue(tupleIndex - 1, name);
         return this;
     }
 
@@ -87,7 +90,7 @@ public class TupleMappers implements JdbiConfig<TupleMappers>, MapEntryConfig<Tu
      * @return the column name to be mapped explicitly
      */
     public String getColumn(int tupleIndex) {
-        return columns[tupleIndex - 1];
+        return columns.getValue(tupleIndex - 1);
     }
 
     @Override

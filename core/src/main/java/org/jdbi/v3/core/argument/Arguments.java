@@ -15,18 +15,17 @@ package org.jdbi.v3.core.argument;
 
 import java.lang.reflect.Type;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import org.jdbi.v3.core.array.SqlArrayArgumentFactory;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.qualifier.QualifiedType;
 import org.jdbi.v3.meta.Beta;
 
@@ -37,9 +36,10 @@ import org.jdbi.v3.meta.Beta;
  * (see #findFor(...)).
  * The factories are consulted in reverse order of registration (i.e. last-registered wins).
  */
-public class Arguments implements JdbiConfig<Arguments> {
-    private final List<QualifiedArgumentFactory> factories;
-    private final Map<QualifiedType<?>, Function<Object, Argument>> preparedFactories = new ConcurrentHashMap<>();
+public final class Arguments implements JdbiConfig<Arguments> {
+    private JdbiConfigList<QualifiedArgumentFactory> factories;
+
+    private final ConcurrentMap<QualifiedType<?>, Function<Object, Argument>> preparedFactories = new ConcurrentHashMap<>();
     private final Set<QualifiedType<?>> didPrepare = ConcurrentHashMap.newKeySet();
 
     private ConfigRegistry registry;
@@ -48,7 +48,8 @@ public class Arguments implements JdbiConfig<Arguments> {
     private boolean preparedArgumentsEnabled = true;
 
     public Arguments(final ConfigRegistry registry) {
-        factories = new CopyOnWriteArrayList<>();
+        this.factories = JdbiConfigList.create();
+
         this.registry = registry;
 
         // register built-in factories, priority of factories is by reverse registration order
@@ -72,16 +73,16 @@ public class Arguments implements JdbiConfig<Arguments> {
         register(new DirectArgumentFactory());
     }
 
+    private Arguments(final Arguments that) {
+        this.factories = that.factories;
+        this.untypedNullArgument = that.untypedNullArgument;
+        this.bindingNullToPrimitivesPermitted = that.bindingNullToPrimitivesPermitted;
+        this.preparedArgumentsEnabled = that.preparedArgumentsEnabled;
+    }
+
     @Override
     public void setRegistry(final ConfigRegistry registry) {
         this.registry = registry;
-    }
-
-    private Arguments(final Arguments that) {
-        factories = new CopyOnWriteArrayList<>(that.factories);
-        untypedNullArgument = that.untypedNullArgument;
-        bindingNullToPrimitivesPermitted = that.bindingNullToPrimitivesPermitted;
-        preparedArgumentsEnabled = that.preparedArgumentsEnabled;
     }
 
     /**
@@ -101,7 +102,7 @@ public class Arguments implements JdbiConfig<Arguments> {
      * @return this
      */
     public Arguments register(final QualifiedArgumentFactory factory) {
-        factories.add(0, factory);
+        this.factories = factories.addFirst(factory);
         return this;
     }
 
@@ -180,7 +181,7 @@ public class Arguments implements JdbiConfig<Arguments> {
     }
 
     public List<QualifiedArgumentFactory> getFactories() {
-        return Collections.unmodifiableList(factories);
+        return factories.asUnmodifiableList();
     }
 
     /**
