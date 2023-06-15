@@ -15,6 +15,7 @@ package org.jdbi.v3.core.statement;
 
 import java.sql.Types;
 
+import de.softwareforge.testing.postgres.junit5.RequirePostgresVersion;
 import org.assertj.core.data.Offset;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.junit5.H2DatabaseExtension;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+@RequirePostgresVersion(atLeast = "14")
 public class TestCallable {
 
     @RegisterExtension
