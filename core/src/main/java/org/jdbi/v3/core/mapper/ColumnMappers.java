@@ -14,14 +14,13 @@
 package org.jdbi.v3.core.mapper;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jdbi.v3.core.array.SqlArrayMapperFactory;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.enums.internal.EnumMapperFactory;
 import org.jdbi.v3.core.generic.GenericType;
 import org.jdbi.v3.core.interceptor.JdbiInterceptionChainHolder;
@@ -36,16 +35,17 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
 
     private final JdbiInterceptionChainHolder<ColumnMapper<?>, QualifiedColumnMapperFactory> inferenceInterceptors;
 
-    private final List<QualifiedColumnMapperFactory> factories;
+    private JdbiConfigList<QualifiedColumnMapperFactory> factories;
     private final Map<QualifiedType<?>, Optional<? extends ColumnMapper<?>>> cache;
 
     private boolean coalesceNullPrimitivesToDefaults = true;
     private ConfigRegistry registry;
 
     public ColumnMappers() {
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredColumnMapperFactory::new);
-        factories = new CopyOnWriteArrayList<>();
-        cache = new CopyOnWriteHashMap<>();
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredColumnMapperFactory::new);
+        this.factories = JdbiConfigList.create();
+
+        this.cache = new CopyOnWriteHashMap<>();
         register(new SqlArrayMapperFactory());
         register(new JavaTimeMapperFactory());
         register(new SqlTimeMapperFactory());
@@ -59,10 +59,10 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
     }
 
     private ColumnMappers(ColumnMappers that) {
-        factories = new CopyOnWriteArrayList<>(that.factories);
-        cache = new CopyOnWriteHashMap<>(that.cache);
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
-        coalesceNullPrimitivesToDefaults = that.coalesceNullPrimitivesToDefaults;
+        this.factories = that.factories;
+        this.cache = new CopyOnWriteHashMap<>(that.cache);
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
+        this.coalesceNullPrimitivesToDefaults = that.coalesceNullPrimitivesToDefaults;
     }
 
     @Override
@@ -154,7 +154,7 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
      * @return this
      */
     public ColumnMappers register(QualifiedColumnMapperFactory factory) {
-        factories.add(0, factory);
+        this.factories = factories.addFirst(factory);
         cache.clear();
         return this;
     }
@@ -203,27 +203,23 @@ public class ColumnMappers implements JdbiConfig<ColumnMappers> {
      */
     @SuppressWarnings({ "unchecked", "rawtypes", "PMD.UnnecessaryCast" })
     public <T> Optional<ColumnMapper<T>> findFor(QualifiedType<T> type) {
-        // ConcurrentHashMap can enter an infinite loop on nested computeIfAbsent calls.
-        // Since column mappers can decorate other column mappers, we have to populate the cache the old fashioned way.
-        // See https://bugs.openjdk.java.net/browse/JDK-8062841, https://bugs.openjdk.java.net/browse/JDK-8142175
-        Optional<ColumnMapper<T>> cached = (Optional) cache.get(type);
+        // setting the registry may create more calls to findFor, which is not allowed in computeIfAbsent
 
-        if (cached != null) {
-            return cached;
+        if (cache.containsKey(type)) {
+            return (Optional) cache.get(type);
         }
 
+        Optional<ColumnMapper<T>> result = Optional.empty();
         for (QualifiedColumnMapperFactory factory : factories) {
-            Optional<ColumnMapper<T>> maybeMapper = (Optional) factory.build(type, registry);
-            ColumnMapper<T> mapper = maybeMapper.orElse(null);
-            if (mapper != null) {
-                mapper.init(registry);
-                cache.put(type, maybeMapper);
-                return maybeMapper;
+            result = (Optional) factory.build(type, registry);
+            result.ifPresent(mapper -> mapper.init(registry));
+            if (result.isPresent()) {
+                break; // for(Qualified
             }
         }
 
-        cache.put(type, Optional.empty());
-        return Optional.empty();
+        cache.put(type, result);
+        return result;
     }
 
     /**

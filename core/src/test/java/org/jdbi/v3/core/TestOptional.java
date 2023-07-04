@@ -61,7 +61,7 @@ public class TestOptional {
 
     @Test
     public void testMapToOptional() {
-        GenericType<Optional<String>> optionalString = new GenericType<Optional<String>>() {};
+        GenericType<Optional<String>> optionalString = new GenericType<>() {};
 
         assertThat(handle.select("select name from something where id = 0")
             .collectInto(optionalString))

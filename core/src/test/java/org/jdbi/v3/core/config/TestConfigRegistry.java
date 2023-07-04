@@ -13,14 +13,13 @@
  */
 package org.jdbi.v3.core.config;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
+import org.jdbi.v3.core.config.internal.JdbiConfigSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -201,20 +200,20 @@ public class TestConfigRegistry {
 
     public static class TestConfig implements JdbiConfig<TestConfig> {
 
-        private final List<String> list;
-        private final Set<String> set;
-        private final Map<String, String> map;
+        private JdbiConfigList<String> list;
+        private JdbiConfigSet<String> set;
+        private JdbiConfigMap<String, String> map;
 
         public TestConfig() {
-            this.list = new CopyOnWriteArrayList<>();
-            this.set = new CopyOnWriteArraySet<>();
-            this.map = new ConcurrentHashMap<>();
+            this.list = JdbiConfigList.create();
+            this.set = JdbiConfigSet.create();
+            this.map = JdbiConfigMap.create();
         }
 
         private TestConfig(TestConfig that) {
-            this.list = new CopyOnWriteArrayList<>(that.list);
-            this.set = new CopyOnWriteArraySet<>(that.set);
-            this.map = new ConcurrentHashMap<>(that.map);
+            this.list = that.list;
+            this.set = that.set;
+            this.map = that.map;
         }
 
         @Override
@@ -223,30 +222,30 @@ public class TestConfigRegistry {
         }
 
         public TestConfig addList(String key) {
-            this.list.add(key);
+            this.list = list.addLast(key);
             return this;
         }
 
         public TestConfig addSet(String key) {
-            this.set.add(key);
+            this.set = set.addElements(key);
             return this;
         }
 
         public TestConfig addMap(String key, String value) {
-            this.map.put(key, value);
+            this.map = map.putElement(key, value);
             return this;
         }
 
         public Set<String> getSet() {
-            return Collections.unmodifiableSet(set);
+            return set.asUnmodifiableSet();
         }
 
         public List<String> getList() {
-            return Collections.unmodifiableList(list);
+            return list.asUnmodifiableList();
         }
 
         public Map<String, String> getMap() {
-            return Collections.unmodifiableMap(map);
+            return map.asUnmodifiableMap();
         }
     }
 }

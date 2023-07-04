@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.Configurable;
+import org.jdbi.v3.core.config.internal.JdbiConfigSet;
 import org.jdbi.v3.core.extension.ExtensionContext;
 import org.jdbi.v3.core.extension.ExtensionMethod;
 import org.jdbi.v3.core.extension.Extensions;
@@ -80,7 +81,7 @@ public class Handle implements Closeable, Configurable<Handle> {
 
     private final Set<Cleanable> cleanables = new LinkedHashSet<>();
 
-    private final Set<HandleListener> handleListeners;
+    private JdbiConfigSet<HandleListener> handleListeners;
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -182,7 +183,7 @@ public class Handle implements Closeable, Configurable<Handle> {
      * @return The handle itself.
      */
     public Handle addHandleListener(HandleListener handleListener) {
-        handleListeners.add(handleListener);
+        this.handleListeners = handleListeners.addElements(handleListener);
 
         return this;
     }
@@ -196,7 +197,7 @@ public class Handle implements Closeable, Configurable<Handle> {
      * @return The handle itself.
      */
     public Handle removeHandleListener(HandleListener handleListener) {
-        handleListeners.remove(handleListener);
+        this.handleListeners = handleListeners.removeElements(handleListener);
 
         return this;
     }

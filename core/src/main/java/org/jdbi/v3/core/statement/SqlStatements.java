@@ -17,14 +17,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -35,6 +31,9 @@ import org.jdbi.v3.core.cache.JdbiCacheBuilder;
 import org.jdbi.v3.core.cache.JdbiCacheLoader;
 import org.jdbi.v3.core.cache.internal.DefaultJdbiCacheBuilder;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
+import org.jdbi.v3.core.config.internal.JdbiConfigMap;
+import org.jdbi.v3.core.config.internal.JdbiConfigSet;
 import org.jdbi.v3.meta.Beta;
 
 /**
@@ -45,7 +44,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
     /** The default size of the SQL template cache. */
     public static final int SQL_TEMPLATE_CACHE_SIZE = 1_000;
 
-    private final Map<String, Object> attributes;
+    private JdbiConfigMap<String, Object> attributes;
     private TemplateEngine templateEngine;
     private JdbiCache<StatementCacheKey, Function<StatementContext, String>> templateCache;
     private SqlParser sqlParser;
@@ -54,23 +53,26 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
     private boolean allowUnusedBindings;
     private boolean attachAllStatementsForCleanup;
     private boolean attachCallbackStatementsForCleanup = true;
-    private final Collection<StatementCustomizer> customizers;
-
-    private final Collection<StatementContextListener> contextListeners;
+    private JdbiConfigList<StatementCustomizer> customizers;
+    private JdbiConfigSet<StatementContextListener> contextListeners;
 
     public SqlStatements() {
-        attributes = Collections.synchronizedMap(new HashMap<>());
-        templateEngine = new DefinedAttributeTemplateEngine();
-        sqlParser = new ColonPrefixSqlParser();
-        sqlLogger = SqlLogger.NOP_SQL_LOGGER;
-        queryTimeout = null;
-        customizers = new CopyOnWriteArrayList<>();
-        contextListeners = new CopyOnWriteArraySet<>();
-        templateCache = DefaultJdbiCacheBuilder.builder().maxSize(SQL_TEMPLATE_CACHE_SIZE).build();
+        this.attributes = JdbiConfigMap.create();
+        this.customizers = JdbiConfigList.create();
+        this.contextListeners = JdbiConfigSet.create();
+
+        this.templateEngine = new DefinedAttributeTemplateEngine();
+        this.sqlParser = new ColonPrefixSqlParser();
+        this.sqlLogger = SqlLogger.NOP_SQL_LOGGER;
+        this.queryTimeout = null;
+        this.templateCache = DefaultJdbiCacheBuilder.builder().maxSize(SQL_TEMPLATE_CACHE_SIZE).build();
     }
 
     private SqlStatements(SqlStatements that) {
-        this.attributes = Collections.synchronizedMap(that.getAttributes()); // already copied
+        this.attributes = that.attributes;
+        this.customizers = that.customizers;
+        this.contextListeners = that.contextListeners;
+
         this.templateEngine = that.templateEngine;
         this.sqlParser = that.sqlParser;
         this.sqlLogger = that.sqlLogger;
@@ -78,8 +80,6 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
         this.allowUnusedBindings = that.allowUnusedBindings;
         this.attachAllStatementsForCleanup = that.attachAllStatementsForCleanup;
         this.attachCallbackStatementsForCleanup = that.attachCallbackStatementsForCleanup;
-        this.customizers = new CopyOnWriteArrayList<>(that.customizers);
-        this.contextListeners = new CopyOnWriteArraySet<>(that.contextListeners);
         this.templateCache = that.templateCache;
     }
 
@@ -91,7 +91,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
      * @return this
      */
     public SqlStatements define(String key, Object value) {
-        attributes.put(key, value);
+        this.attributes = attributes.putElement(key, value);
         return this;
     }
 
@@ -101,9 +101,9 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
      * @param values map of attributes to define.
      * @return this
      */
-    public SqlStatements defineMap(final Map<String, ?> values) {
+    public SqlStatements defineMap(final Map<String, Object> values) {
         if (values != null) {
-            attributes.putAll(values);
+            this.attributes = attributes.putElements(values);
         }
         return this;
     }
@@ -115,7 +115,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
      * @return the value of the attribute
      */
     public Object getAttribute(String key) {
-        return attributes.get(key);
+        return attributes.getElement(key);
     }
 
     /**
@@ -124,7 +124,7 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
      * @return the defined attributes.
      */
     public Map<String, Object> getAttributes() {
-        return new HashMap<>(attributes);
+        return attributes.asUnmodifiableMap();
     }
 
     /**
@@ -135,12 +135,12 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
      * @return this
      */
     public SqlStatements addCustomizer(final StatementCustomizer customizer) {
-        this.customizers.add(customizer);
+        this.customizers = customizers.addLast(customizer);
         return this;
     }
 
     public SqlStatements addContextListener(final StatementContextListener listener) {
-        this.contextListeners.add(listener);
+        this.contextListeners = contextListeners.addElements(listener);
         return this;
     }
 
@@ -356,11 +356,11 @@ public final class SqlStatements implements JdbiConfig<SqlStatements> {
     }
 
     Collection<StatementCustomizer> getCustomizers() {
-        return customizers;
+        return customizers.asUnmodifiableList();
     }
 
     Collection<StatementContextListener> getContextListeners() {
-        return contextListeners;
+        return contextListeners.asUnmodifiableSet();
     }
 
     String preparedRender(String template, StatementContext ctx) {

@@ -14,14 +14,12 @@
 package org.jdbi.v3.core.mapper.reflect;
 
 import java.lang.reflect.AccessibleObject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.mapper.CaseStrategy;
 import org.jdbi.v3.meta.Alpha;
 
@@ -33,7 +31,7 @@ import static org.jdbi.v3.core.mapper.reflect.AccessibleObjectStrategy.FORCE_MAK
  */
 public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
 
-    private List<ColumnNameMatcher> columnNameMatchers;
+    private JdbiConfigList<ColumnNameMatcher> columnNameMatchers;
     private boolean strictMatching;
     private UnaryOperator<String> caseChange;
     private Consumer<AccessibleObject> makeAccessible;
@@ -43,19 +41,19 @@ public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
      * snake_case matching for names.
      */
     public ReflectionMappers() {
-        columnNameMatchers = Arrays.asList(
-                new CaseInsensitiveColumnNameMatcher(),
-                new SnakeCaseColumnNameMatcher());
+        columnNameMatchers = JdbiConfigList.<ColumnNameMatcher>create()
+                .addLast(new CaseInsensitiveColumnNameMatcher(), new SnakeCaseColumnNameMatcher());
+
         strictMatching = false;
         caseChange = CaseStrategy.LOCALE_LOWER;
         makeAccessible = FORCE_MAKE_ACCESSIBLE;
     }
 
     private ReflectionMappers(ReflectionMappers that) {
-        columnNameMatchers = new ArrayList<>(that.columnNameMatchers);
-        strictMatching = that.strictMatching;
-        caseChange = that.caseChange;
-        makeAccessible = that.makeAccessible;
+        this.columnNameMatchers = that.columnNameMatchers;
+        this.strictMatching = that.strictMatching;
+        this.caseChange = that.caseChange;
+        this.makeAccessible = that.makeAccessible;
     }
 
     /**
@@ -64,16 +62,17 @@ public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
      * @return the registered column name mappers.
      */
     public List<ColumnNameMatcher> getColumnNameMatchers() {
-        return Collections.unmodifiableList(columnNameMatchers);
+        return columnNameMatchers.asUnmodifiableList();
     }
 
     /**
      * Replace all column name matchers with the given list.
+     *
      * @param columnNameMatchers the column name matchers to use
      * @return this
      */
     public ReflectionMappers setColumnNameMatchers(List<ColumnNameMatcher> columnNameMatchers) {
-        this.columnNameMatchers = new ArrayList<>(columnNameMatchers);
+        this.columnNameMatchers = this.columnNameMatchers.addLast(columnNameMatchers);
         return this;
     }
 
@@ -89,7 +88,7 @@ public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
     /**
      * Throw an IllegalArgumentException if a the set of fields doesn't
      * match to columns exactly.
-     *
+     * <p>
      * Reflection mappers with prefixes will only check those columns that
      * begin with the mapper's prefix.
      *
@@ -129,7 +128,6 @@ public class ReflectionMappers implements JdbiConfig<ReflectionMappers> {
      *
      * @param makeAccessible A {@link Consumer} instance that implements the strategy.
      * @see AccessibleObjectStrategy
-     *
      */
     @Alpha
     public ReflectionMappers setAccessibleObjectStrategy(Consumer<AccessibleObject> makeAccessible) {

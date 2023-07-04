@@ -14,26 +14,26 @@
 package org.jdbi.v3.core.collector;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collector;
 
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 
 /**
  * Registry of collector factories.
  * Contains a set of collector factories, registered by the application.
  */
 public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
-    private final List<CollectorFactory> factories;
+    private JdbiConfigList<CollectorFactory> factories;
     private ConcurrentMap<Type, Optional<CollectorFactory>> factoryCache;
 
     public JdbiCollectors() {
-        factories = new CopyOnWriteArrayList<>();
-        factoryCache = new ConcurrentHashMap<>();
+        this.factories = JdbiConfigList.create();
+
+        this.factoryCache = new ConcurrentHashMap<>();
         register(new MapCollectorFactory());
         register(new OptionalCollectorFactory());
         register(new ListCollectorFactory());
@@ -44,8 +44,8 @@ public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
     }
 
     private JdbiCollectors(JdbiCollectors that) {
-        factoryCache = that.factoryCache;
-        factories = new CopyOnWriteArrayList<>(that.factories);
+        this.factories = that.factories;
+        this.factoryCache = that.factoryCache;
     }
 
     /**
@@ -54,8 +54,10 @@ public class JdbiCollectors implements JdbiConfig<JdbiCollectors> {
      * @return this
      */
     public JdbiCollectors register(CollectorFactory factory) {
-        factories.add(0, factory);
+        this.factories = factories.addFirst(factory);
+
         factoryCache = new ConcurrentHashMap<>();
+
         return this;
     }
 

@@ -14,14 +14,13 @@
 package org.jdbi.v3.core.array;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.enums.internal.EnumSqlArrayTypeFactory;
 import org.jdbi.v3.core.interceptor.JdbiInterceptionChainHolder;
 import org.jdbi.v3.core.internal.JdbiOptionals;
@@ -34,14 +33,15 @@ public class SqlArrayTypes implements JdbiConfig<SqlArrayTypes> {
 
     private final JdbiInterceptionChainHolder<SqlArrayType<?>, SqlArrayTypeFactory> inferenceInterceptors;
 
-    private final List<SqlArrayTypeFactory> factories;
+    private JdbiConfigList<SqlArrayTypeFactory> factories;
     private SqlArrayArgumentStrategy argumentStrategy;
 
     private ConfigRegistry registry;
 
     public SqlArrayTypes() {
+        factories = JdbiConfigList.create();
+
         inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredSqlArrayTypeFactory::new);
-        factories = new CopyOnWriteArrayList<>();
         argumentStrategy = SqlArrayArgumentStrategy.SQL_ARRAY;
 
         register(boolean.class, "boolean");
@@ -62,9 +62,10 @@ public class SqlArrayTypes implements JdbiConfig<SqlArrayTypes> {
     }
 
     private SqlArrayTypes(SqlArrayTypes that) {
-        factories = new CopyOnWriteArrayList<>(that.factories);
-        argumentStrategy = that.argumentStrategy;
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
+        this.factories = that.factories;
+
+        this.argumentStrategy = that.argumentStrategy;
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
     }
 
     /**
@@ -124,7 +125,7 @@ public class SqlArrayTypes implements JdbiConfig<SqlArrayTypes> {
      * @return this
      */
     public SqlArrayTypes register(SqlArrayTypeFactory factory) {
-        factories.add(0, factory);
+        this.factories = factories.addFirst(factory);
         return this;
     }
 

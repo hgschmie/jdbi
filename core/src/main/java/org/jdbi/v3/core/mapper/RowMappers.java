@@ -14,13 +14,12 @@
 package org.jdbi.v3.core.mapper;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.generic.GenericType;
 import org.jdbi.v3.core.interceptor.JdbiInterceptionChainHolder;
 import org.jdbi.v3.core.internal.CopyOnWriteHashMap;
@@ -34,24 +33,27 @@ import org.jdbi.v3.meta.Alpha;
 public class RowMappers implements JdbiConfig<RowMappers> {
 
     private final JdbiInterceptionChainHolder<RowMapper<?>, RowMapperFactory> inferenceInterceptors;
-
-    private final List<RowMapperFactory> factories;
     private final Map<Type, Optional<RowMapper<?>>> cache;
+
+    private JdbiConfigList<RowMapperFactory> factories;
 
     private ConfigRegistry registry;
 
     public RowMappers() {
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredRowMapperFactory::new);
-        factories = new CopyOnWriteArrayList<>();
-        cache = new CopyOnWriteHashMap<>();
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(InferredRowMapperFactory::new);
+        this.cache = new CopyOnWriteHashMap<>();
+
+        this.factories = JdbiConfigList.create();
+
         register(MapEntryMapper.factory());
         register(new PojoMapperFactory());
     }
 
     private RowMappers(RowMappers that) {
-        factories = new CopyOnWriteArrayList<>(that.factories);
-        cache = new CopyOnWriteHashMap<>(that.cache);
-        inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
+        this.inferenceInterceptors = new JdbiInterceptionChainHolder<>(that.inferenceInterceptors);
+        this.cache = new CopyOnWriteHashMap<>(that.cache);
+
+        this.factories = that.factories;
     }
 
     @Override
@@ -119,7 +121,8 @@ public class RowMappers implements JdbiConfig<RowMappers> {
      * @return this
      */
     public RowMappers register(RowMapperFactory factory) {
-        factories.add(0, factory);
+        this.factories = factories.addFirst(factory);
+
         cache.clear();
         return this;
     }
@@ -157,27 +160,22 @@ public class RowMappers implements JdbiConfig<RowMappers> {
      * @return a RowMapper for the given type, or empty if no row mapper is registered for the given type.
      */
     public Optional<RowMapper<?>> findFor(Type type) {
-        // ConcurrentHashMap can enter an infinite loop on nested computeIfAbsent calls.
-        // Since row mappers can decorate other row mappers, we have to populate the cache the old fashioned way.
-        // See https://bugs.openjdk.java.net/browse/JDK-8062841, https://bugs.openjdk.java.net/browse/JDK-8142175
-        Optional<RowMapper<?>> cached = cache.get(type);
 
-        if (cached != null) {
-            return cached;
+        if (cache.containsKey(type)) {
+            return cache.get(type);
         }
 
+        Optional<RowMapper<?>> result = Optional.empty();
         for (RowMapperFactory factory : factories) {
-            Optional<RowMapper<?>> maybeMapper = factory.build(type, registry);
-            RowMapper<?> mapper = maybeMapper.orElse(null);
-            if (mapper != null) {
-                mapper.init(registry);
-                cache.put(type, maybeMapper);
-                return maybeMapper;
+            result = factory.build(type, registry);
+            result.ifPresent(mapper -> mapper.init(registry));
+            if (result.isPresent()) {
+                break; // for(Qualified
             }
         }
 
-        cache.put(type, Optional.empty());
-        return Optional.empty();
+        cache.put(type, result);
+        return result;
     }
 
     @Override

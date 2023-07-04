@@ -13,14 +13,13 @@
  */
 package org.jdbi.v3.core.extension;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.config.JdbiConfig;
+import org.jdbi.v3.core.config.internal.JdbiConfigList;
 import org.jdbi.v3.core.extension.annotation.UseExtensionHandler;
 import org.jdbi.v3.core.extension.annotation.UseExtensionHandlerCustomizer;
 import org.jdbi.v3.core.internal.CopyOnWriteHashMap;
@@ -35,11 +34,11 @@ import static org.jdbi.v3.core.extension.ExtensionFactory.FactoryFlag.NON_VIRTUA
  */
 public class Extensions implements JdbiConfig<Extensions> {
 
-    private final List<ExtensionFactoryDelegate> extensionFactories;
+    private JdbiConfigList<ExtensionFactoryDelegate> extensionFactories;
     private final Map<Class<?>, ExtensionMetadata> extensionMetadataCache;
-    private final List<ExtensionHandlerCustomizer> extensionHandlerCustomizers;
-    private final List<ExtensionHandlerFactory> extensionHandlerFactories;
-    private final List<ConfigCustomizerFactory> configCustomizerFactories;
+    private JdbiConfigList<ExtensionHandlerCustomizer> extensionHandlerCustomizers;
+    private JdbiConfigList<ExtensionHandlerFactory> extensionHandlerFactories;
+    private JdbiConfigList<ConfigCustomizerFactory> configCustomizerFactories;
 
     private boolean allowProxy;
     private boolean failFast;
@@ -55,11 +54,11 @@ public class Extensions implements JdbiConfig<Extensions> {
      * </ul>
      */
     public Extensions() {
-        extensionFactories = new CopyOnWriteArrayList<>();
+        extensionFactories = JdbiConfigList.create();
         extensionMetadataCache = new CopyOnWriteHashMap<>();
-        extensionHandlerCustomizers = new CopyOnWriteArrayList<>();
-        extensionHandlerFactories = new CopyOnWriteArrayList<>();
-        configCustomizerFactories = new CopyOnWriteArrayList<>();
+        extensionHandlerCustomizers = JdbiConfigList.create();
+        extensionHandlerFactories = JdbiConfigList.create();
+        configCustomizerFactories = JdbiConfigList.create();
 
         allowProxy = true;
         failFast = false;
@@ -83,11 +82,11 @@ public class Extensions implements JdbiConfig<Extensions> {
      * @param that the configuration to clone
      */
     private Extensions(Extensions that) {
-        extensionFactories = new CopyOnWriteArrayList<>(that.extensionFactories);
-        extensionMetadataCache = new CopyOnWriteHashMap<>(that.extensionMetadataCache);
-        extensionHandlerCustomizers = new CopyOnWriteArrayList<>(that.extensionHandlerCustomizers);
-        extensionHandlerFactories = new CopyOnWriteArrayList<>(that.extensionHandlerFactories);
-        configCustomizerFactories = new CopyOnWriteArrayList<>(that.configCustomizerFactories);
+        this.extensionFactories = that.extensionFactories;
+        this.extensionMetadataCache = new CopyOnWriteHashMap<>(that.extensionMetadataCache);
+        this.extensionHandlerCustomizers = that.extensionHandlerCustomizers;
+        this.extensionHandlerFactories = that.extensionHandlerFactories;
+        this.configCustomizerFactories = that.configCustomizerFactories;
 
         allowProxy = that.allowProxy;
         failFast = that.failFast;
@@ -105,7 +104,7 @@ public class Extensions implements JdbiConfig<Extensions> {
      * @return This instance
      */
     public Extensions register(ExtensionFactory factory) {
-        extensionFactories.add(0, new ExtensionFactoryDelegate(factory));
+        extensionFactories = extensionFactories.addFirst(new ExtensionFactoryDelegate(factory));
         return this;
     }
 
@@ -132,7 +131,7 @@ public class Extensions implements JdbiConfig<Extensions> {
      */
     @Alpha
     public Extensions registerHandlerCustomizer(ExtensionHandlerCustomizer extensionHandlerCustomizer) {
-        extensionHandlerCustomizers.add(0, extensionHandlerCustomizer);
+        extensionHandlerCustomizers = extensionHandlerCustomizers.addFirst(extensionHandlerCustomizer);
         return this;
     }
 
@@ -146,7 +145,7 @@ public class Extensions implements JdbiConfig<Extensions> {
      */
     @Alpha
     public Extensions registerConfigCustomizerFactory(ConfigCustomizerFactory configCustomizerFactory) {
-        configCustomizerFactories.add(0, configCustomizerFactory);
+        configCustomizerFactories = configCustomizerFactories.addFirst(configCustomizerFactory);
         return this;
     }
 
@@ -219,7 +218,7 @@ public class Extensions implements JdbiConfig<Extensions> {
     }
 
     private Extensions internalRegisterHandlerFactory(ExtensionHandlerFactory extensionHandlerFactory) {
-        extensionHandlerFactories.add(0, extensionHandlerFactory);
+        extensionHandlerFactories = extensionHandlerFactories.addFirst(extensionHandlerFactory);
         return this;
     }
 
