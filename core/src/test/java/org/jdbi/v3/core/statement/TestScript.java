@@ -134,7 +134,7 @@ public class TestScript {
 
             // local variable of CharSequence not String because
             // CharSequence.chars() since Java 1.8 <=> String.chars() since Java 9
-            CharSequence lastStmt = statements.get(2);
+            String lastStmt = statements.get(2);
             assertThat(lastStmt)
                     .startsWith("CREATE OR REPLACE TRIGGER EXAMPLE_TRIGGER")
                     .endsWith("END;")
