@@ -90,8 +90,6 @@ public class SqlScriptParser {
     public static final class ScriptTokenHandler implements TokenHandler {
 
         private final List<String> statements = new ArrayList<>();
-        private Token lastToken = null;
-
         private int blockLevel = 0;
 
         @Override
@@ -111,9 +109,6 @@ public class SqlScriptParser {
                     break;
                 case SEMICOLON:
                     if (blockLevel == 0) {
-                        if (lastToken != null && lastToken.getType() == BLOCK_END) {
-                            sb.append(t.getText());
-                        }
                         addStatement(sb.toString());
                         sb.setLength(0);
                     } else {
@@ -123,7 +118,6 @@ public class SqlScriptParser {
                 default:
                     sb.append(t.getText());
             }
-            lastToken = t;
         }
 
         public List<String> getStatements() {
