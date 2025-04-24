@@ -653,18 +653,6 @@ public class Handle implements Closeable, Configurable<Handle> {
      *
      * @param savepointName the name of the savepoint to release.
      * @return the same handle.
-     * @deprecated Use {@link Handle#releaseSavepoint(String)}
-     */
-    @Deprecated(since = "3.35.0", forRemoval = true)
-    public Handle release(String savepointName) {
-        return releaseSavepoint(savepointName);
-    }
-
-    /**
-     * Release a previously created savepoint.
-     *
-     * @param savepointName the name of the savepoint to release.
-     * @return the same handle.
      */
     public Handle releaseSavepoint(String savepointName) {
         transactionHandler.releaseSavepoint(this, savepointName);
@@ -784,40 +772,11 @@ public class Handle implements Closeable, Configurable<Handle> {
      *
      * @param level the {@link TransactionIsolationLevel} to use.
      * @throws UnableToManipulateTransactionIsolationLevelException if isolation level is not supported by the underlying connection or JDBC driver.
-     * @deprecated Use {@link Handle#setTransactionIsolationLevel(int)}
-     */
-    @Deprecated(since = "3.35.0", forRemoval = true)
-    public void setTransactionIsolation(TransactionIsolationLevel level) {
-        setTransactionIsolationLevel(level);
-    }
-
-    /**
-     * Set the transaction isolation level on the underlying connection if it is different from the current isolation level.
-     *
-     * @param level the {@link TransactionIsolationLevel} to use.
-     * @throws UnableToManipulateTransactionIsolationLevelException if isolation level is not supported by the underlying connection or JDBC driver.
      */
     public void setTransactionIsolationLevel(TransactionIsolationLevel level) {
         if (level != TransactionIsolationLevel.UNKNOWN) {
             setTransactionIsolationLevel(level.intValue());
         }
-    }
-
-    /**
-     * Set the transaction isolation level on the underlying connection if it is different from the current isolation level.
-     *
-     * @param level the isolation level to use.
-     * @see Handle#setTransactionIsolationLevel(TransactionIsolationLevel)
-     * @see Connection#TRANSACTION_NONE
-     * @see Connection#TRANSACTION_READ_UNCOMMITTED
-     * @see Connection#TRANSACTION_READ_COMMITTED
-     * @see Connection#TRANSACTION_REPEATABLE_READ
-     * @see Connection#TRANSACTION_SERIALIZABLE
-     * @deprecated Use {@link Handle#setTransactionIsolationLevel(TransactionIsolationLevel)}
-     */
-    @Deprecated(since = "3.35.0", forRemoval = true)
-    public void setTransactionIsolation(int level) {
-        setTransactionIsolationLevel(level);
     }
 
     /**

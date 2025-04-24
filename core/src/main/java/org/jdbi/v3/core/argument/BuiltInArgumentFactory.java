@@ -15,11 +15,9 @@ package org.jdbi.v3.core.argument;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.enums.EnumByName;
@@ -28,10 +26,8 @@ import org.jdbi.v3.core.statement.SqlStatement;
 import org.jdbi.v3.core.statement.UnableToCreateStatementException;
 
 /**
- * The BuiltInArgumentFactory provides instances of {@link Argument} for
- * many core Java types.  Generally you should not need to use this
- * class directly, but instead should bind your object with the
- * {@link SqlStatement} convenience methods.
+ * The BuiltInArgumentFactory provides instances of {@link Argument} for many core Java types.  Generally you should not need to use this class directly, but
+ * instead should bind your object with the {@link SqlStatement} convenience methods.
  *
  * @deprecated will be replaced by a plugin
  */
@@ -40,52 +36,42 @@ public class BuiltInArgumentFactory implements ArgumentFactory.Preparable {
     public static final ArgumentFactory INSTANCE = new BuiltInArgumentFactory();
 
     private static final List<ArgumentFactory.Preparable> FACTORIES = Arrays.asList(
-        new PrimitivesArgumentFactory(),
-        new BoxedArgumentFactory(),
-        new EssentialsArgumentFactory(),
-        new SqlArgumentFactory(),
-        new InternetArgumentFactory(),
-        new SqlTimeArgumentFactory(),
-        new JavaTimeArgumentFactory(),
-        new LegacyEnumByNameArgumentFactory(),
-        new OptionalArgumentFactory(),
-        new UntypedNullArgumentFactory()
+            new PrimitivesArgumentFactory(),
+            new BoxedArgumentFactory(),
+            new EssentialsArgumentFactory(),
+            new SqlArgumentFactory(),
+            new InternetArgumentFactory(),
+            new SqlTimeArgumentFactory(),
+            new JavaTimeArgumentFactory(),
+            new LegacyEnumByNameArgumentFactory(),
+            new OptionalArgumentFactory(),
+            new UntypedNullArgumentFactory()
     );
 
     @Override
     public Optional<Function<Object, Argument>> prepare(Type type, ConfigRegistry config) {
         return FACTORIES.stream()
-            .flatMap(factory -> factory.prepare(type, config).stream())
-            .findFirst();
+                .flatMap(factory -> factory.prepare(type, config).stream())
+                .findFirst();
     }
 
     @Override
     public Optional<Argument> build(Type expectedType, Object value, ConfigRegistry config) {
         return FACTORIES.stream()
-            .flatMap(factory -> factory.build(expectedType, value, config).stream())
-            .findFirst();
-    }
-
-    /**
-     * @deprecated no longer used
-     */
-    @Override
-    @Deprecated(since = "3.39.0", forRemoval = true)
-    public Collection<? extends Type> prePreparedTypes() {
-        return FACTORIES.stream()
-                .map(ArgumentFactory.Preparable::prePreparedTypes)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+                .flatMap(factory -> factory.build(expectedType, value, config).stream())
+                .findFirst();
     }
 
     private static class LegacyEnumByNameArgumentFactory implements ArgumentFactory.Preparable {
         private final EnumArgumentFactory delegate = new EnumArgumentFactory();
+
         @Override
         public Optional<Function<Object, Argument>> prepare(Type type, ConfigRegistry config) {
             return EnumArgumentFactory.ifEnum(type).map(clazz ->
                     value -> build(type, value, config)
-                        .orElseThrow(() -> new UnableToCreateStatementException("No enum value to bind after prepare")));
+                            .orElseThrow(() -> new UnableToCreateStatementException("No enum value to bind after prepare")));
         }
+
         @Override
         public Optional<Argument> build(Type expectedType, Object rawValue, ConfigRegistry config) {
             return delegate.build(QualifiedType.of(expectedType).with(EnumByName.class), rawValue, config);
