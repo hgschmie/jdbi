@@ -19,14 +19,10 @@ import java.util.Comparator;
 import java.util.Set;
 
 /**
- * Uses the equivalent of {@link MessageFormat#format(String, Object...)} as a template engine.
- *
- * You must use "0", "1", "2", etc as keys: start at 0, increment by 1. Keys must be numerically unique. You must {@link org.jdbi.v3.core.config.Configurable#define(String, Object)} as many key/value pairs as there are placeholders in the pattern string.
- *
- * You may {@code define} key/value pairs in any order. Keys may contain leading {@code '0'}s.
- *
- * Any invalid use will trigger an {@link IllegalArgumentException} (or subclasses such as {@link NumberFormatException}) when {@link #render(String, StatementContext)} is called – typically when the statement is about to be executed.
- *
+ * Uses the equivalent of {@link MessageFormat#format(String, Object...)} as a template engine.<br>
+ * You must use "0", "1", "2", etc as keys: start at 0, increment by 1. Keys must be numerically unique. You must {@link org.jdbi.v3.core.config.Configurable#define(String, Object)} as many key/value pairs as there are placeholders in the pattern string.<br>
+ * You may {@code define} key/value pairs in any order. Keys may contain leading {@code '0'}s.<br>
+ * Any invalid use will trigger an {@link IllegalArgumentException} (or subclasses such as {@link NumberFormatException}) when {@link #render(String, StatementContext)} is called – typically when the statement is about to be executed.<br>
  * Example usage:
  * <pre>{@code
  *     // select bar from foo where col = 'abc'
