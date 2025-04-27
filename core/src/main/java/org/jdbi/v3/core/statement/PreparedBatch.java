@@ -68,15 +68,6 @@ public class PreparedBatch extends SqlStatement<PreparedBatch> implements Result
         getContext().setBinding(new PreparedBinding(getContext()));
     }
 
-    /**
-     * Backwards compatible constructor that takes an explicit string argument.
-     *
-     * @see PreparedBatch#PreparedBatch(Handle, CharSequence)
-     */
-    public PreparedBatch(Handle handle, String sql) {
-        this(handle, (CharSequence) sql);
-    }
-
     @Override
     PreparedBatch bindNamedArgumentFinder(NamedArgumentFinderFactory factory, String prefix, Object value, Type type, Supplier<NamedArgumentFinder> backupArgumentFinder) {
         PreparedBinding binding = getBinding();
