@@ -25,6 +25,7 @@ import org.jdbi.v3.core.config.ConfigRegistry;
  *
  * jdbi3-jackson2 and jdbi3-gson2 are readily available for this.
  */
+@SuppressWarnings("PMD.ImplicitFunctionalInterface")
 public interface JsonMapper {
     TypedJsonMapper forType(Type type, ConfigRegistry config);
 
