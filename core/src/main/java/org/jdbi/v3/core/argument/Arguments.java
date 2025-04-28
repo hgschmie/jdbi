@@ -167,9 +167,9 @@ public class Arguments implements JdbiConfig<Arguments> {
             return Optional.of(prepared);
         }
         for (final QualifiedArgumentFactory factory : factories) {
-            if (factory instanceof QualifiedArgumentFactory.Preparable) {
+            if (factory instanceof QualifiedArgumentFactory.Preparable preparable) {
                 final Optional<Function<Object, Argument>> argumentFactory =
-                        ((QualifiedArgumentFactory.Preparable) factory).prepare(type, registry);
+                        preparable.prepare(type, registry);
                 if (argumentFactory.isPresent()) {
                     preparedFactories.putIfAbsent(type, argumentFactory.get());
                     return argumentFactory;
