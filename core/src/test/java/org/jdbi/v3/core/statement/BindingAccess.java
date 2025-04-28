@@ -27,8 +27,8 @@ public final class BindingAccess {
         throw new AssertionError("BindingAccess can not be instantiated");
     }
 
-    public static Optional<Argument> findForName(Binding binding, String name, StatementContext ctx) {
-        return binding.findForName(name, ctx);
+    public static Optional<Argument> findForName(Binding binding, String name) {
+        return binding.findForName(name);
     }
 
     public static Collection<String> getNames(Binding binding) {

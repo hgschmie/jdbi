@@ -109,18 +109,17 @@ public class Binding {
      * Look up an argument by name.
      *
      * @param name the key to lookup the value of
-     * @param ctx2 the statement context
      *
      * @return the bound Argument
      */
-    Optional<Argument> findForName(String name, StatementContext ctx2) {
+    Optional<Argument> findForName(String name) {
         final Object found = named.get(name);
         if (found != null || named.containsKey(name)) {
-            return Optional.of(new ArgumentBinder(null, ctx2, ParsedParameters.NONE).toArgument(found));
+            return Optional.of(new ArgumentBinder(null, ctx, ParsedParameters.NONE).toArgument(found));
         }
 
         return namedArgumentFinder.stream()
-                .flatMap(arguments -> arguments.find(name, ctx2).stream())
+                .flatMap(arguments -> arguments.find(name, ctx).stream())
                 .findFirst();
     }
 

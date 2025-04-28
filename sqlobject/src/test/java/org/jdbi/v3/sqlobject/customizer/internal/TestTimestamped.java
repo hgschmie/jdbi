@@ -75,7 +75,7 @@ public class TestTimestamped {
             public void logBeforeExecution(StatementContext ctx) {
                 String name = logNext.get();
                 if (name != null) {
-                    String toString = BindingAccess.findForName(ctx.getBinding(), name, ctx)
+                    String toString = BindingAccess.findForName(ctx.getBinding(), name)
                         .orElseThrow(AssertionError::new)
                         .toString();
                     insertedTimestamp.set(OffsetDateTime.parse(toString));
