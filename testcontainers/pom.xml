@@ -112,6 +112,12 @@
 
         <!-- test deps -->
 
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-sqlobject</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- JDBC drivers -->
 
         <dependency>
