@@ -200,7 +200,7 @@ public class JdbiPropertyTest {
     static final class UnboundDetector implements StatementCustomizer {
         @Override
         public void beforeExecution(PreparedStatement stmt, StatementContext ctx) throws SQLException {
-            assertThat(BindingAccess.findForName(ctx.getBinding(), "unbound", ctx)).isEmpty();
+            assertThat(BindingAccess.findForName(ctx.getBinding(), "unbound")).isEmpty();
             assertThat(BindingAccess.getNames(ctx.getBinding())).doesNotContain("unbound");
         }
     }
