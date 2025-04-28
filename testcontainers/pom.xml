@@ -33,7 +33,7 @@
         <!-- docker tests run long -->
         <basepom.test.timeout>600</basepom.test.timeout>
         <dep.clickhouse.version>0.6.5</dep.clickhouse.version>
-        <dep.db2.version>11.5.9.0</dep.db2.version>
+        <dep.db2.version>12.1.0.0</dep.db2.version>
         <dep.trino.version>475</dep.trino.version>
         <dep.yugabyte.version>42.7.3-yb-4</dep.yugabyte.version>
         <moduleName>org.jdbi.v3.testcontainers</moduleName>
@@ -230,4 +230,32 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.basepom.maven</groupId>
+                <artifactId>duplicate-finder-maven-plugin</artifactId>
+                <configuration>
+                    <exceptions combine.children="append">
+                        <exception>
+                            <conflictingDependencies>
+                                <dependency>
+                                    <groupId>com.ibm.db2</groupId>
+                                    <artifactId>jcc</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.lz4</groupId>
+                                    <artifactId>lz4-java</artifactId>
+                                </dependency>
+                            </conflictingDependencies>
+                            <packages>
+                                <package>net.jpountz</package>
+                            </packages>
+                        </exception>
+                    </exceptions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
