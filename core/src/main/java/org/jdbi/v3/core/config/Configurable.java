@@ -52,6 +52,7 @@ import org.jdbi.v3.meta.Beta;
  *
  * @param <This> The subtype that implements this interface.
  */
+@SuppressWarnings("PMD.ImplicitFunctionalInterface")
 public interface Configurable<This> {
 
     /**
