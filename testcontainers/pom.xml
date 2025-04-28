@@ -32,7 +32,7 @@
         <basepom.test.fork-count>1</basepom.test.fork-count>
         <!-- docker tests run long -->
         <basepom.test.timeout>600</basepom.test.timeout>
-        <dep.clickhouse.version>0.6.5</dep.clickhouse.version>
+        <dep.clickhouse.version>0.8.5</dep.clickhouse.version>
         <dep.db2.version>12.1.0.0</dep.db2.version>
         <dep.trino.version>475</dep.trino.version>
         <dep.yugabyte.version>42.7.3-yb-4</dep.yugabyte.version>
@@ -46,7 +46,6 @@
                 <groupId>com.clickhouse</groupId>
                 <artifactId>clickhouse-jdbc</artifactId>
                 <version>${dep.clickhouse.version}</version>
-                <classifier>all</classifier>
             </dependency>
 
             <dependency>
@@ -123,7 +122,6 @@
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
-            <classifier>all</classifier>
             <scope>test</scope>
         </dependency>
 
@@ -238,6 +236,37 @@
                 <artifactId>duplicate-finder-maven-plugin</artifactId>
                 <configuration>
                     <exceptions combine.children="append">
+                        <exception>
+                            <conflictingDependencies>
+                                <dependency>
+                                    <groupId>com.clickhouse</groupId>
+                                    <artifactId>clickhouse-client</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.clickhouse</groupId>
+                                    <artifactId>clickhouse-data</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.clickhouse</groupId>
+                                    <artifactId>clickhouse-http-client</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.clickhouse</groupId>
+                                    <artifactId>clickhouse-jdbc</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.clickhouse</groupId>
+                                    <artifactId>client-v2</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.clickhouse</groupId>
+                                    <artifactId>jdbc-v2</artifactId>
+                                </dependency>
+                            </conflictingDependencies>
+                            <packages>
+                                <package>com.clickhouse</package>
+                            </packages>
+                        </exception>
                         <exception>
                             <conflictingDependencies>
                                 <dependency>
