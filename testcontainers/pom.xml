@@ -32,14 +32,14 @@
         <basepom.test.fork-count>1</basepom.test.fork-count>
         <!-- docker tests run long -->
         <basepom.test.timeout>600</basepom.test.timeout>
-        <dep.clickhouse.version>0.6.0</dep.clickhouse.version>
+        <dep.clickhouse.version>0.6.5</dep.clickhouse.version>
         <dep.db2.version>11.5.9.0</dep.db2.version>
-        <dep.trino.version>437</dep.trino.version>
-        <dep.yugabyte.version>42.3.5-yb-4</dep.yugabyte.version>
+        <dep.trino.version>475</dep.trino.version>
+        <dep.yugabyte.version>42.7.3-yb-4</dep.yugabyte.version>
         <moduleName>org.jdbi.v3.testcontainers</moduleName>
     </properties>
 
-    <!-- we need tons of additional JDBC drivers in this one module. So we keep them all here. -->
+    <!-- We need tons of additional JDBC drivers in this one module. So we keep them all here. -->
     <dependencyManagement>
         <dependencies>
             <dependency>
