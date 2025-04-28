@@ -107,8 +107,8 @@ public class SerializableTransactionRunner extends DelegatingTransactionHandler 
         Throwable t = throwable;
 
         do {
-            if (t instanceof SQLException) {
-                String sqlState = ((SQLException) t).getSQLState();
+            if (t instanceof SQLException e) {
+                String sqlState = e.getSQLState();
 
                 if (sqlState != null && sqlState.startsWith(expectedSqlState)) {
                     return true;

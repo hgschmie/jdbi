@@ -59,9 +59,9 @@ public class ResultSetResultIterable<T> implements ResultIterable<T> {
     public <R extends Collection<? super T>> R collectInto(Type containerType) {
 
         Type type = containerType;
-        if (containerType instanceof Class) {
+        if (containerType instanceof Class<?> clazz) {
             // a raw class is a collection that needs to be parameterized with Object
-            type = GenericTypes.parameterizeClass((Class) containerType, Object.class);
+            type = GenericTypes.parameterizeClass(clazz, Object.class);
         }
 
         Collector<? super T, ?, R> collector = (Collector<? super T, ?, R>) ctx.findCollectorFor(type)
