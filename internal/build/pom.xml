@@ -113,14 +113,8 @@
         <dep.moshi.version>1.15.2</dep.moshi.version>
         <dep.mssql.version>12.10.0.jre11</dep.mssql.version>
         <dep.mysql.version>9.2.0</dep.mysql.version>
-<<<<<<< HEAD
-        <dep.opentelemetry.version>1.49.0</dep.opentelemetry.version>
-||||||| parent of d038aab0f (build all test classes natively if supported)
-        <dep.opentelemetry.version>1.48.0</dep.opentelemetry.version>
-=======
         <dep.native-graalvm.version>0.10.7-SNAPSHOT</dep.native-graalvm.version>
-        <dep.opentelemetry.version>1.48.0</dep.opentelemetry.version>
->>>>>>> d038aab0f (build all test classes natively if supported)
+        <dep.opentelemetry.version>1.49.0</dep.opentelemetry.version>
         <dep.oracle-xe.version>23.7.0.25.01</dep.oracle-xe.version>
         <dep.otj-pg-embedded.version>1.1.0</dep.otj-pg-embedded.version>
         <dep.pg-embedded.version>5.2.0</dep.pg-embedded.version>
@@ -1096,6 +1090,7 @@
                                 <failNoTests>false</failNoTests>
                                 <buildArgs>
                                     <buildArg>--report-unsupported-elements-at-runtime</buildArg>
+                                    <buildArg>--trace-object-instantiation=com.sun.jmx.mbeanserver.JmxMBeanServer</buildArg>
                                     <buildArg>--initialize-at-build-time=org.junit.jupiter.api.condition.JRE,kotlin.annotation.AnnotationRetention,kotlin.annotation.AnnotationTarget,org.jdbi.v3.core.statement.internal.JfrSupport,org.jdbi.v3.core.statement.JdbiStatementEvent</buildArg>
                                 </buildArgs>
                                 <metadataRepository>
