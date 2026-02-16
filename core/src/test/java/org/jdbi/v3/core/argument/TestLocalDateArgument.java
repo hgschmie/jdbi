@@ -18,7 +18,9 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import org.jdbi.v3.core.qualifier.QualifiedType;
 import org.jdbi.v3.core.statement.StatementContextAccess;
+import org.jdbi.v3.meta.Legacy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,8 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 /**
- * Check that {@link java.time.LocalDate} arguments are bound to corresponding
- * {@link java.sql.Date} values.
+ * Check that {@link java.time.LocalDate} arguments are bound to corresponding {@link java.sql.Date} values.
  */
 @ExtendWith(MockitoExtension.class)
 public class TestLocalDateArgument {
@@ -38,12 +39,12 @@ public class TestLocalDateArgument {
     PreparedStatement stmt;
 
     @Test
-    public void testBindLocalDate() throws SQLException {
-        ArgumentFactory factory = new JavaTimeArgumentFactory();
+    public void testBindLegacyLocalDate() throws SQLException {
+        var factory = new LegacyArgumentFactory();
 
         LocalDate date = LocalDate.of(2001, 1, 1);
 
-        Optional<Argument> optionalArgument = factory.build(LocalDate.class, date, null);
+        Optional<Argument> optionalArgument = factory.build(QualifiedType.of(LocalDate.class).with(Legacy.class), date, null);
         assertThat(optionalArgument).isPresent();
 
         Argument argument = optionalArgument.get();

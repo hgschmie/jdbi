@@ -11,15 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jdbi.v3.postgres;
+package org.jdbi.v3.oracle12;
 
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,32 +25,22 @@ import org.jdbi.v3.core.config.ConfigRegistry;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.mapper.ColumnMapperFactory;
 
-/**
- * Provide mappers corresponding to java time types.
- *
- * @see JavaTimeArgumentFactory for the list of types
- */
-public class JavaTimeMapperFactory implements ColumnMapperFactory {
+public class JavaTimeColumnMapperFactory implements ColumnMapperFactory {
+
     private static final Map<Class<?>, ColumnMapper<?>> MAPPERS = Map.of(
-        ZonedDateTime.class, (r, i, ctx) -> getPostgresZonedData(r, i),
-        Instant.class, (r, i, ctx) -> getPostgresInstant(r, i)
+        Instant.class, (r, columnNumber, ctx) -> getOracleInstant(r, columnNumber)
     );
 
     @Override
     public Optional<ColumnMapper<?>> build(Type type, ConfigRegistry config) {
-
         return Optional.of(type)
             .filter(Class.class::isInstance)
             .map(Class.class::cast)
             .map(MAPPERS::get);
     }
 
-    private static ZonedDateTime getPostgresZonedData(ResultSet r, int i) throws SQLException {
-        OffsetDateTime offsetDateTime = r.getObject(i, OffsetDateTime.class);
-        return offsetDateTime == null ? null : offsetDateTime.atZoneSameInstant(ZoneOffset.UTC);
-    }
-
-    private static Instant getPostgresInstant(ResultSet r, int i) throws SQLException {
-        return r.getTimestamp(i).toInstant();
+    private static Instant getOracleInstant(ResultSet r, int i) throws SQLException {
+        Timestamp ts = r.getTimestamp(i);
+        return ts == null ? null : ts.toInstant();
     }
 }

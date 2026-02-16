@@ -79,6 +79,11 @@ public class ObjectArgument implements Argument {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public final <T> T getValue() {
+        return (T) value;
+    }
+
     @Override
     public String toString() {
         return (value == null ? "NULL" : String.valueOf(value))

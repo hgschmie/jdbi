@@ -11,37 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jdbi.v3.postgres;
+package org.jdbi.v3.oracle12;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
 import org.jdbi.v3.core.argument.Argument;
 import org.jdbi.v3.core.argument.ArgumentFactory;
-import org.jdbi.v3.core.argument.ObjectArgument;
 import org.jdbi.v3.core.config.ConfigRegistry;
 
-/**
- * Maps {@link LocalDate}, {@link LocalTime}, {@link LocalDateTime}, {@link OffsetDateTime}. Note that no {@link java.time.Instant} override is needed.
- */
 public class JavaTimeArgumentFactory implements ArgumentFactory.Preparable {
 
     private static final Map<Class<?>, Function<Object, Argument>> TYPES = Map.of(
-        ZonedDateTime.class, value -> {
-            var v = value == null ? null : ((ZonedDateTime) value).toOffsetDateTime();
-            return ObjectArgument.of(v, Types.TIMESTAMP_WITH_TIMEZONE);
-        },
-        Instant.class, value -> (position, statement, ctx) -> statement.setTimestamp(position, Timestamp.from((Instant) value))
+        Instant.class, value -> (p, s, ctx) -> s.setTimestamp(p, Timestamp.from((Instant) value))
     );
 
     @Override

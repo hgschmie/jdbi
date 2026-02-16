@@ -13,8 +13,6 @@
  */
 package org.jdbi.v3.core.argument;
 
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,14 +20,16 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.Map;
 
-class JavaTimeArgumentFactory extends DelegatingArgumentFactory {
+class JavaTimeArgumentFactory extends SetObjectArgumentFactory {
     JavaTimeArgumentFactory() {
-        register(Instant.class, Types.TIMESTAMP, (p, i, v) -> p.setTimestamp(i, Timestamp.from(v)));
-        register(LocalDate.class, Types.DATE, (p, i, v) -> p.setDate(i, java.sql.Date.valueOf(v)));
-        register(LocalTime.class, Types.TIME, (p, i, v) -> p.setTime(i, Time.valueOf(v)));
-        register(LocalDateTime.class, Types.TIMESTAMP, (p, i, v) -> p.setTimestamp(i, Timestamp.valueOf(v)));
-        register(OffsetDateTime.class, Types.TIMESTAMP, (p, i, v) -> p.setTimestamp(i, Timestamp.from(v.toInstant())));
-        register(ZonedDateTime.class, Types.TIMESTAMP, (p, i, v) -> p.setTimestamp(i, Timestamp.from(v.toInstant())));
+        super(Map.of(Instant.class, Types.TIMESTAMP,
+            LocalDate.class, Types.DATE,
+            LocalTime.class, Types.TIME,
+            LocalDateTime.class, Types.TIMESTAMP,
+            OffsetDateTime.class, Types.TIMESTAMP_WITH_TIMEZONE,
+            ZonedDateTime.class, Types.TIMESTAMP_WITH_TIMEZONE
+        ));
     }
 }
